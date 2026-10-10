@@ -1,70 +1,83 @@
 import { describe, expect, it } from 'vitest'
 import { buildDraftBadges } from '../../../../src/renderer/overlay/src/draft-badges'
 import type { OverlayDataPayload } from '@shared/types'
+import type { DraftRecommendation } from '@core/domain/contextual-ranking'
 
-function board(): OverlayDataPayload {
-  return {
-    scanData: {
-      ultimates: [],
-      standard: [
-        { name: 'a', displayName: 'A skill', pickRate: 8, winrate: .5 },
-        { name: 'b', displayName: 'B skill', pickRate: 2, winrate: .5 },
-        { name: null, displayName: 'Unknown', pickRate: 1, isUnknown: true },
-        { name: 'c', displayName: 'C skill', pickRate: null },
-      ],
-      selectedAbilities: [],
+const data = {
+  scanData: {
+    ultimates: [],
+    standard: [
+      { name: 'a', displayName: '技能甲' },
+      { name: 'b', displayName: '技能乙' },
+    ],
+    selectedAbilities: [{ name: 'owned', displayName: '已选技能', hero_order: 0 }],
+  },
+  selectedSpotHeroOrder: 0,
+  selectedModelHeroOrder: null,
+  heroModels: [{ heroOrder: 0, heroName: 'axe', heroDisplayName: '斧王' }],
+} as unknown as OverlayDataPayload
+
+const recommendation = {
+  choices: [
+    {
+      key: 'ability:b',
+      kind: 'ability',
+      name: 'b',
+      displayName: '技能乙',
+      rank: 1,
+      selfScore: 61,
+      reasons: ['补全自身组合'],
+      confidence: 'limited',
     },
-    heroModels: [
-      { heroOrder: 0, heroName: 'slark', heroDisplayName: 'Slark', pickRate: 3, winrate: .5 },
-      { heroOrder: 1, heroName: 'axe', heroDisplayName: 'Axe', pickRate: 1, isPicked: true },
-    ],
-    opCombinations: [
-      {
-        ability1Name: 'a',
-        ability2Name: 'b',
-        ability1DisplayName: 'A skill',
-        ability2DisplayName: 'B skill',
-        synergyWinrate: 0.65,
-      },
-    ],
-    heroSynergies: [
-      { heroDisplayName: 'Slark', abilityDisplayName: 'B skill', synergyWinrate: 0.62 },
-    ],
-  } as unknown as OverlayDataPayload
-}
-describe('on-icon draft guidance', () => {
-  it('ranks earliest-picked skills first, excluding unknown data and picked models', () => {
-    const result = buildDraftBadges(board())
-    expect(result.abilities.get('b')?.rank).toBe(1)
-    expect(result.abilities.get('a')?.rank).toBe(3)
-    expect(result.abilities.get('c')?.rank).toBeUndefined()
+    {
+      key: 'hero:axe',
+      kind: 'hero',
+      name: 'axe',
+      heroOrder: 0,
+      displayName: '斧王',
+      rank: 2,
+      selfScore: 60,
+      reasons: [],
+      confidence: 'limited',
+    },
+  ],
+  best: { key: 'ability:b' },
+  waitPicks: 8,
+  notes: [],
+  threats: [
+    {
+      key: 'pair',
+      kind: 'own',
+      names: ['已选技能', '技能乙'],
+      candidateKeys: ['ability:b'],
+      synergyWinrate: 0.65,
+    },
+    {
+      key: 'other',
+      kind: 'potential',
+      names: ['技能甲', '斧王'],
+      candidateKeys: ['ability:a', 'hero:axe'],
+      synergyWinrate: 0.67,
+    },
+  ],
+} as unknown as DraftRecommendation
+
+describe('one recommendation projected to all icon guidance', () => {
+  it('uses exactly the central ranks and explanations, with no independent scoring', () => {
+    const result = buildDraftBadges(data, recommendation)
+    expect(result.abilities.get('b')).toMatchObject({
+      rank: 1,
+      selfScore: 61,
+      reasons: ['补全自身组合'],
+    })
     expect(result.models.get(0)?.rank).toBe(2)
-    expect(result.models.has(1)).toBe(false)
+    expect(result.abilities.get('a')?.rank).toBeUndefined()
   })
-  it('puts the same combo letter on both skills and on model-skill pairs', () => {
-    const result = buildDraftBadges(board())
-    expect(result.abilities.get('a')?.groups.map((g) => g.label)).toContain('A')
-    expect(result.abilities.get('b')?.groups.map((g) => g.label)).toEqual(['A', 'B'])
-    expect(result.models.get(0)?.groups.map((g) => g.label)).toEqual(['B'])
-  })
-  it('does not promise combinations whose missing member belongs to an opponent', () => {
-    const data = board()
-    data.scanData!.standard = data.scanData!.standard.filter((s) => s.name !== 'a')
-    data.scanData!.selectedAbilities = [{ name: 'a', hero_order: 8 }] as never
-    data.selectedSpotHeroOrder = 0
-    expect(
-      buildDraftBadges(data)
-        .abilities.get('b')
-        ?.groups.map((g) => g.label),
-    ).not.toContain('A')
-  })
-  it('keeps your picked model as a combo anchor without giving it an available-pick rank', () => {
-    const data = board()
-    data.heroModels[0].isPicked = true
-    data.selectedModelHeroOrder = 0
-    const result = buildDraftBadges(data)
-    expect(result.models.get(0)?.rank).toBeUndefined()
-    expect(result.models.get(0)?.groups.map((g) => g.label)).toEqual(['B'])
-    expect(result.abilities.get('b')?.groups.map((g) => g.label)).toContain('B')
+  it('shares letters only around the first choice, including its owned anchor', () => {
+    const result = buildDraftBadges(data, recommendation)
+    expect(result.abilities.get('owned')?.groups.map((g) => g.label)).toEqual(['A'])
+    expect(result.abilities.get('b')?.groups.map((g) => g.label)).toEqual(['A'])
+    expect(result.abilities.get('a')?.groups).toEqual([])
+    expect(result.groups).toHaveLength(1)
   })
 })

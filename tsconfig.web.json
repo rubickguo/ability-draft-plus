@@ -24,9 +24,5 @@
       "@core/*": ["src/core/*"]
     }
   },
-  "include": [
-    "src/renderer/**/*",
-    "src/shared/**/*",
-    "src/core/**/*"
-  ]
+  "include": ["src/renderer/**/*", "src/shared/**/*", "src/core/**/*", "resources/data/*.json"]
 }

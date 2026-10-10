@@ -270,7 +270,24 @@ export interface DraftRankingData {
     ability2Name: string
     synergyWinrate: number
     synergyIncrease: number | null
+    numPicks?: number | null
   }[]
+  heroPairs?: {
+    heroName: string
+    abilityName: string
+    synergyWinrate: number
+    synergyIncrease: number | null
+    numPicks?: number | null
+  }[]
+  sampleCounts?: Record<string, { numPicks: number | null; highSkillNumPicks: number | null }>
+  evidence?: { sourceDate: string; patches: string[] }
+  context?: {
+    /** Number of completed picks only when a contiguous, timed draft history is verified. */
+    currentPick: number | null
+    modelAssignments: { playerIndex: number; heroName: string }[]
+    rolePositions: number[]
+    roleMode?: string
+  }
 }
 
 /** What the role layer decided this scan — drives the overlay's role UI. */

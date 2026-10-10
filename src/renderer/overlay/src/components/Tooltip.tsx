@@ -8,10 +8,6 @@ import type {
   HeroSynergyDisplay,
 } from '@shared/types'
 import type { IconGuidance } from '../draft-badges'
-import {
-  PERSONAL_SCORE_DELTA_EPSILON,
-  ROLE_SCORE_DELTA_EPSILON,
-} from '@shared/constants/thresholds'
 
 export type TooltipData =
   | { type: 'ability'; slot: EnrichedScanSlot }
@@ -43,128 +39,6 @@ function formatSynergyWr(wr: number): string {
   const n = typeof wr === 'number' ? wr : Number(wr)
   if (Number.isNaN(n)) return '—'
   return `${(n * 100).toFixed(1)}%`
-}
-
-// Personal (linked Windrun profile) stat line, shared by ability and hero
-// tooltips. The arrow marks whether personalization moved the score up or down
-// vs the global-only ranking; negligible shifts render no arrow.
-function PersonalStatLine({
-  games,
-  winrate,
-  scoreDelta,
-  t,
-}: {
-  games?: number
-  winrate?: number
-  scoreDelta?: number
-  t: TFunction<'overlay'>
-}): React.ReactElement | null {
-  if (games == null || winrate == null) return null
-
-  const delta = scoreDelta ?? 0
-  const arrow =
-    delta > PERSONAL_SCORE_DELTA_EPSILON ? '▲' : delta < -PERSONAL_SCORE_DELTA_EPSILON ? '▼' : null
-  const arrowClass =
-    delta > PERSONAL_SCORE_DELTA_EPSILON ? 'tooltip-personal-up' : 'tooltip-personal-down'
-
-  return (
-    <div className="tooltip-stat tooltip-personal">
-      {t('tooltip.personalStats', {
-        value: formatWinrate(winrate),
-        games: String(games),
-      })}
-      {arrow && <span className={arrowClass}> {arrow}</span>}
-    </div>
-  )
-}
-
-// Role-fit line (role-aware suggestions): which effective position this ability
-// fits best and whether the role layer moved its score up or down. Negligible
-// shifts render nothing — same anti-noise rule as the personal line.
-function RoleStatLine({
-  scoreDelta,
-  position,
-  t,
-}: {
-  scoreDelta?: number
-  position?: number
-  t: TFunction<'overlay'>
-}): React.ReactElement | null {
-  if (scoreDelta == null || position == null) return null
-  if (Math.abs(scoreDelta) <= ROLE_SCORE_DELTA_EPSILON) return null
-
-  const up = scoreDelta > 0
-  return (
-    <div className="tooltip-stat tooltip-role">
-      {t('tooltip.roleFit', { position: String(position) })}
-      <span className={up ? 'tooltip-role-up' : 'tooltip-role-down'}> {up ? '▲' : '▼'}</span>
-    </div>
-  )
-}
-
-// Layer C pairing line: how the picked model's chassis moved this ability (or
-// how the user's drafted abilities moved this model). Same anti-noise epsilon.
-function PairingStatLine({
-  scoreDelta,
-  t,
-}: {
-  scoreDelta?: number
-  t: TFunction<'overlay'>
-}): React.ReactElement | null {
-  if (scoreDelta == null) return null
-  if (Math.abs(scoreDelta) <= ROLE_SCORE_DELTA_EPSILON) return null
-
-  const up = scoreDelta > 0
-  return (
-    <div className="tooltip-stat tooltip-role">
-      {t('tooltip.pairingFit')}
-      <span className={up ? 'tooltip-role-up' : 'tooltip-role-down'}> {up ? '▲' : '▼'}</span>
-    </div>
-  )
-}
-
-// Needs-engine reason chips ('covers:<need>' / 'duplicate:<need>' / 'curated')
-// — the explainability half of the tags feature: WHY the role layer moved this.
-function RoleReasonChips({
-  reasons,
-  t,
-}: {
-  reasons?: string[]
-  t: TFunction<'overlay'>
-}): React.ReactElement | null {
-  if (!reasons || reasons.length === 0) return null
-  return (
-    <div className="tooltip-role-chips">
-      {reasons.map((reason) => {
-        const [kind, key, via] = reason.split(':')
-        if (kind === 'curated') {
-          return (
-            <span key={reason} className="tooltip-role-chip tooltip-role-chip-curated">
-              {t('tooltip.roleCurated')}
-            </span>
-          )
-        }
-        // Full-credit alternative match: the chip names the MATCHED tag, not
-        // the need it satisfied ("Covers your missing nuke" — Shadow Realm
-        // ruling). Partial credit says so explicitly and keeps the need name.
-        const need = t(`tooltip.roleNeeds.${via ?? key}`, { defaultValue: via ?? key })
-        return (
-          <span
-            key={reason}
-            className={`tooltip-role-chip${kind === 'duplicate' ? ' tooltip-role-chip-dup' : ''}`}
-          >
-            {kind === 'duplicate'
-              ? t('tooltip.roleDuplicate', { need })
-              : kind === 'partial'
-                ? t('tooltip.rolePartial', {
-                    need: t(`tooltip.roleNeeds.${key}`, { defaultValue: key }),
-                  })
-                : t('tooltip.roleCovers', { need })}
-          </span>
-        )
-      })}
-    </div>
-  )
 }
 
 function positionTooltip(el: HTMLDivElement, anchorRect: DOMRect): void {
@@ -220,23 +94,26 @@ export function Tooltip({ data, anchorRect, guidance }: TooltipProps): React.Rea
       id="overlay-tooltip"
       style={{ left: -9999, top: -9999 }}
     >
+      {guidance?.rank != null && (
+        <div className="tooltip-recommendation">
+          <div className="tooltip-recommendation-rank">当前推荐 #{guidance.rank}</div>
+          {guidance.selfScore != null && (
+            <div className="tooltip-stat">
+              自身适配指数：{guidance.selfScore.toFixed(1)}（不是胜率）
+            </div>
+          )}
+          {guidance.reasons?.map((reason) => (
+            <div className="tooltip-recommendation-reason" key={reason}>
+              {reason}
+            </div>
+          ))}
+          {guidance.fallback && <div className="tooltip-stat">部分数据不足，按保守权重计算</div>}
+        </div>
+      )}
       {data.type === 'ability' ? (
         <AbilityTooltipContent slot={data.slot} t={t} />
       ) : (
         <HeroTooltipContent model={data.model} t={t} />
-      )}
-      {guidance?.rank != null && (
-        <div className="tooltip-section-title">
-          {t('badges.rankTitle', { rank: guidance.rank })}
-          <div className="tooltip-stat">
-            {t(guidance.fallback ? 'badges.fallback' : 'badges.hs', {
-              value: ((guidance.highSkillWinrate ?? 0) * 100).toFixed(1),
-            })}
-          </div>
-          <div className="tooltip-stat">
-            {t('badges.score', { value: ((guidance.score ?? 0) * 100).toFixed(1) })}
-          </div>
-        </div>
       )}
       {!!guidance?.groups.length && (
         <div className="tooltip-section-title">{t('badges.combinations')}</div>
@@ -269,26 +146,6 @@ function AbilityTooltipContent({
 
   return (
     <>
-      {/* Badges */}
-      {slot.isSynergySuggestionForMySpot && (
-        <div className="tooltip-badge tooltip-badge-synergy">
-          &#x2726; {t('tooltip.synergyPick')}
-        </div>
-      )}
-      {slot.isGeneralTopTier &&
-        !slot.isSynergySuggestionForMySpot &&
-        (slot.isCuratedForRole ? (
-          <div className="tooltip-badge tooltip-badge-curated">
-            &#x2726; {t('tooltip.curatedPick')}
-          </div>
-        ) : slot.isPersonallyDriven ? (
-          <div className="tooltip-badge tooltip-badge-personal">
-            &#x2605; {t('tooltip.personalPick')}
-          </div>
-        ) : (
-          <div className="tooltip-badge tooltip-badge-top">&#x2605; {t('tooltip.topPick')}</div>
-        ))}
-
       <div className="tooltip-title">{slot.displayName}</div>
       <div className="tooltip-stat">
         {t('tooltip.winrate', { value: formatWinrate(slot.winrate) })}
@@ -296,15 +153,14 @@ function AbilityTooltipContent({
       <div className="tooltip-stat">
         {t('tooltip.pickRate', { value: formatPickRate(slot.pickRate) })}
       </div>
-      <PersonalStatLine
-        games={slot.personalGames}
-        winrate={slot.personalWinrate}
-        scoreDelta={slot.personalScoreDelta}
-        t={t}
-      />
-      <RoleStatLine scoreDelta={slot.roleScoreDelta} position={slot.roleBestPosition} t={t} />
-      <RoleReasonChips reasons={slot.roleReasons} t={t} />
-      <PairingStatLine scoreDelta={slot.pairingScoreDelta} t={t} />
+      {slot.personalGames != null && slot.personalWinrate != null && (
+        <div className="tooltip-stat tooltip-personal">
+          {t('tooltip.personalStats', {
+            value: formatWinrate(slot.personalWinrate),
+            games: String(slot.personalGames),
+          })}
+        </div>
+      )}
       {slot.inertOnModel && (
         <div className="tooltip-stat tooltip-inert">{t('tooltip.inertOnModel')}</div>
       )}
@@ -318,14 +174,6 @@ function AbilityTooltipContent({
                 : 'tooltip.requiresAbility',
             { name: slot.unmetRequirement.displayName },
           )}
-        </div>
-      )}
-      {slot.roleAvoided && (
-        <div className="tooltip-stat tooltip-inert">{t('tooltip.roleAvoided')}</div>
-      )}
-      {slot.overrated && (
-        <div className="tooltip-stat tooltip-inert">
-          {t('tooltip.overrated', { value: formatWinrate(slot.winrate) })}
         </div>
       )}
       {/* Round-4 tag verdicts: Aghanim's stacking (own picks) beats the
@@ -351,10 +199,6 @@ function AbilityTooltipContent({
           {t('tooltip.pointSinkConflict', { names: slot.pointSinkConflictWith.join(', ') })}
         </div>
       )}
-      {slot.contestedSoon && (slot.isGeneralTopTier || slot.isSynergySuggestionForMySpot) && (
-        <div className="tooltip-stat tooltip-contested">{t('tooltip.contestedSoon')}</div>
-      )}
-
       <SynergySection
         title={t('tooltip.strongSynergies')}
         items={slot.highWinrateCombinations}
@@ -389,19 +233,6 @@ function HeroTooltipContent({
 }): React.ReactElement {
   return (
     <>
-      {model.isGeneralTopTier &&
-        (model.isCuratedForRole ? (
-          <div className="tooltip-badge tooltip-badge-curated">
-            &#x2726; {t('tooltip.curatedPick')}
-          </div>
-        ) : model.isPersonallyDriven ? (
-          <div className="tooltip-badge tooltip-badge-personal">
-            &#x2605; {t('tooltip.personalPick')}
-          </div>
-        ) : (
-          <div className="tooltip-badge tooltip-badge-model">&#x2605; {t('tooltip.topModel')}</div>
-        ))}
-
       <div className="tooltip-title">{model.heroDisplayName}</div>
       <div className="tooltip-stat">
         {t('tooltip.winrate', { value: formatWinrate(model.winrate) })}
@@ -409,16 +240,13 @@ function HeroTooltipContent({
       <div className="tooltip-stat">
         {t('tooltip.pickRate', { value: formatPickRate(model.pickRate) })}
       </div>
-      <PersonalStatLine
-        games={model.personalGames}
-        winrate={model.personalWinrate}
-        scoreDelta={model.personalScoreDelta}
-        t={t}
-      />
-      <RoleStatLine scoreDelta={model.roleScoreDelta} position={model.roleBestPosition} t={t} />
-      <PairingStatLine scoreDelta={model.pairingScoreDelta} t={t} />
-      {model.roleAvoided && (
-        <div className="tooltip-stat tooltip-inert">{t('tooltip.roleAvoided')}</div>
+      {model.personalGames != null && model.personalWinrate != null && (
+        <div className="tooltip-stat tooltip-personal">
+          {t('tooltip.personalStats', {
+            value: formatWinrate(model.personalWinrate),
+            games: String(model.personalGames),
+          })}
+        </div>
       )}
 
       <HeroSynergySection

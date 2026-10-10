@@ -97,9 +97,9 @@
     "roleCurated": "为此位置精选",
     "curatedPick": "位置推荐——此位置必备的精选技能",
     "inertOnModel": "无法在你的模型上发挥作用（近战/远程不匹配）",
-    "requiresAbility": "仅能与 {{name}} 配合——选到该技能前不会推荐",
-    "requiresModel": "仅适用于 {{name}} 模型——不会推荐",
-    "requiresTag": "需要 {{name}} 类技能——尚未选取，技能池中也已没有",
+    "requiresAbility": "需要与 {{name}} 配合",
+    "requiresModel": "需要 {{name}} 模型",
+    "requiresTag": "需要 {{name}} 类技能",
     "roleAvoided": "此席位的精选避选项——不会推荐",
     "overrated": "通常较早被选，但胜率仅为 {{value}}——可能被高估",
     "contestedSoon": "通常此时已被选走——可能撑不过下一轮",
@@ -110,11 +110,11 @@
     "pointSinkConflict": "与 {{names}} 争夺技能点——其中一个会长期等级不足"
   },
   "role": {
-    "aria": "分路推荐",
-    "label": "位置",
+    "aria": "游戏内职责偏好",
+    "label": "几号位",
     "off": "关闭",
     "auto": "自动",
-    "offStatus": "分路推荐已关闭",
+    "offStatus": "未指定游戏内几号位",
     "scoringFor": "按 {{positions}} 号位评分",
     "watching": "正在观察队伍趋势…",
     "teamNeeds": "队伍需要 {{positions}} 号位",
@@ -125,19 +125,19 @@
   },
   "badges": {
     "rankTitle": "当前推荐排名 #{{rank}}",
-    "legend": "推荐分＝60% 高水平胜率＋40% 选取顺序分（1–50顺位归一化）。技能与模型统一排名；金色前3，青色4–10。每次扫描排除已选项并重排。",
+    "legend": "技能与模型统一排名；金色前3，青色4–10。按自身搭配、职责与选取顺序更新，兼顾可截胡的敌方组合。",
     "combinations": "可搭配的强力组合",
     "abilityPrefix": "技",
     "modelPrefix": "模",
     "fallback": "高水平数据缺失，使用总体胜率：{{value}}%",
     "hs": "高水平胜率：{{value}}%",
-    "score": "推荐分：{{value}}（不是预测胜率）"
+    "score": "自身适配指数：{{value}}（不是预测胜率）"
   },
   "topCombinations": {
-    "title": "当前技能组合胜率前十",
-    "show": "显示组合胜率前十",
-    "hide": "隐藏组合胜率前十",
-    "note": "仅统计本次仍可选的双技能组合，按数据库已收录的组合胜率降序。",
+    "title": "组合与截胡",
+    "show": "显示组合与截胡",
+    "hide": "隐藏组合与截胡",
+    "note": "优先查看敌方已拿一半的组合；历史胜率不等于本局胜率。",
     "loading": "正在读取组合数据…",
     "empty": "当前可选技能中暂无已收录的组合。"
   }

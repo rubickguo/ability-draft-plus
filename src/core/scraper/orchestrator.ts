@@ -15,6 +15,7 @@ import type { AbilityRepository } from '@core/database/repositories/ability-repo
 import type { SynergyRepository } from '@core/database/repositories/synergy-repository'
 import type { TripletRepository } from '@core/database/repositories/triplet-repository'
 import type { MetadataRepository } from '@core/database/repositories/metadata-repository'
+import { captureRankingEvidence, RANKING_EVIDENCE_KEY } from '@core/database/ranking-evidence'
 
 // @DEV-GUIDE: 3-phase scrape flow controller.
 // Phase 1: Fetch static data + ability/hero stats from Windrun, transform, upsert into DB,
@@ -104,6 +105,8 @@ export async function performFullScrape(
       message: `Upserting ${heroData.length} heroes and ${abilityData.length} abilities...`,
     })
 
+    // A partial scrape must not leave old sample sizes attached to newer statistics.
+    deps.metadata.set(RANKING_EVIDENCE_KEY, '')
     const heroNameToIdMap = deps.heroes.upsertHeroes(heroData)
     deps.abilities.upsertAbilities(
       abilityData.map((a) => ({
@@ -248,6 +251,11 @@ export async function performFullScrape(
     // ── Success ────────────────────────────────────────────────────────────
     const now = new Date().toISOString()
     deps.metadata.setLastScrapeDate(now)
+    captureRankingEvidence(deps.metadata, {
+      overallStats, hsStats, abilityLookup, staticHeroes,
+      pairs: pairsRes.data.abilityPairs ?? [],
+      sourceDate: now, patches: abilitiesRes.data.patches.overall,
+    })
     deps.persist()
 
     // ── Staleness detection ──────────────────────────────────────────────

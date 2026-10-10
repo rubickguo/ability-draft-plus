@@ -1,9 +1,8 @@
-import { useState, useEffect, useRef, useMemo } from 'react'
+import { useState, useEffect, useRef, useMemo, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import { localizeDisplayData } from '@shared/localization/dota-names'
 import type { DraftRankingData, OverlayDataPayload } from '@shared/types'
 import i18n from '../i18n'
-import { availableNames } from '../ranking'
 
 // Safety net: if main never responds (hung enrichment, dead worker), unstick the UI.
 // Generous because a scan may include a lazy ML re-init (up to ~30s worst case).
@@ -36,6 +35,7 @@ export interface OverlayState {
 export function useOverlayData(): OverlayState & {
   triggerScan: (isInitialScan: boolean) => void
   resetOverlay: () => void
+  refreshRanking: () => void
 } {
   const { i18n: languageContext } = useTranslation()
   const [overlayData, setOverlayData] = useState<OverlayDataPayload | null>(null)
@@ -45,6 +45,8 @@ export function useOverlayData(): OverlayState & {
   const [scanError, setScanError] = useState<string | null>(null)
   const [snapshotMessage, setSnapshotMessage] = useState<string | null>(null)
   const [snapshotIsError, setSnapshotIsError] = useState(false)
+  const [rankingRevision, setRankingRevision] = useState(0)
+  const refreshRanking = useCallback(() => setRankingRevision((value) => value + 1), [])
   const scanTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const clearScanTimeout = (): void => {
@@ -57,7 +59,11 @@ export function useOverlayData(): OverlayState & {
   useEffect(() => {
     // Request initial data from main process (avoids did-finish-load timing race)
     window.electronApi.invoke('overlay:getInitialData').then((data) => {
-      if (data) setOverlayData(data)
+      if (data) {
+        setOverlayData(data)
+        setSelectedSpotHeroOrder(data.selectedSpotHeroOrder ?? null)
+        setSelectedModelHeroOrder(data.selectedModelHeroOrder ?? null)
+      }
     })
 
     const unsubOverlayData = window.electronApi.on('overlay:data', (data) => {
@@ -176,7 +182,16 @@ export function useOverlayData(): OverlayState & {
     let cancelled = false
     const scan = overlayData.scanData
     window.electronApi
-      .invoke('draft:getRankingData', { names: availableNames(overlayData) })
+      .invoke('draft:getRankingData', {
+        names: [
+          ...new Set(
+            [...scan.ultimates, ...scan.standard, ...scan.selectedAbilities]
+              .map((slot) => slot.name)
+              .filter((name): name is string => !!name),
+          ),
+        ],
+        heroNames: [...new Set(overlayData.heroModels.map((model) => model.heroName))],
+      })
       .then((data) => {
         if (!cancelled) setRanking({ scan, data })
       })
@@ -189,7 +204,7 @@ export function useOverlayData(): OverlayState & {
     return () => {
       cancelled = true
     }
-  }, [overlayData?.scanData])
+  }, [overlayData?.scanData, selectedSpotHeroOrder, selectedModelHeroOrder, rankingRevision])
 
   const displayData = useMemo(
     () =>
@@ -197,12 +212,14 @@ export function useOverlayData(): OverlayState & {
         overlayData
           ? {
               ...overlayData,
+              selectedSpotHeroOrder,
+              selectedModelHeroOrder,
               rankingData: ranking?.scan === overlayData.scanData ? ranking?.data : undefined,
             }
           : null,
         languageContext.language,
       ),
-    [overlayData, ranking, languageContext.language],
+    [overlayData, ranking, selectedSpotHeroOrder, selectedModelHeroOrder, languageContext.language],
   )
   return {
     overlayData: displayData,
@@ -214,5 +231,6 @@ export function useOverlayData(): OverlayState & {
     snapshotIsError,
     triggerScan,
     resetOverlay,
+    refreshRanking,
   }
 }

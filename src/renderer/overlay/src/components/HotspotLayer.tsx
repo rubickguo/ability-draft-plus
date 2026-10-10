@@ -3,18 +3,20 @@ import type { EnrichedScanSlot, HeroModelDisplay, OverlayDataPayload } from '@sh
 import { AbilityHotspot } from './AbilityHotspot'
 import { HeroModelHotspot } from './HeroModelHotspot'
 import { Tooltip, type TooltipData } from './Tooltip'
-import { buildDraftBadges } from '../draft-badges'
+import { buildDraftBadges, type DraftBadges } from '../draft-badges'
 
 interface HotspotLayerProps {
   overlayData: OverlayDataPayload
   selectedSpotHeroOrder: number | null
   selectedModelHeroOrder: number | null
+  guidance?: DraftBadges
 }
 
 export function HotspotLayer({
   overlayData,
   selectedSpotHeroOrder,
   selectedModelHeroOrder,
+  guidance: providedGuidance,
 }: HotspotLayerProps): React.ReactElement | null {
   const [tooltipData, setTooltipData] = useState<TooltipData | null>(null)
   const [tooltipAnchor, setTooltipAnchor] = useState<DOMRect | null>(null)
@@ -37,7 +39,7 @@ export function HotspotLayer({
   if (!overlayData.scanData) return null
 
   const { scanData, scaleFactor, heroModels, modelsCoords } = overlayData
-  const guidance = buildDraftBadges(overlayData)
+  const guidance = providedGuidance ?? buildDraftBadges(overlayData)
 
   return (
     <>

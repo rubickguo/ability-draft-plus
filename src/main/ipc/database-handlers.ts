@@ -3,6 +3,7 @@ import log from 'electron-log/main'
 import type { DatabaseService } from '../services/database-service'
 import type { BackupService } from '../services/backup-service'
 import type { AppSettings } from '@shared/types'
+import { getDraftRankingData, type RankingDataRequest, type RankingDraftState } from '../services/draft-ranking-data'
 
 // @DEV-GUIDE: Database domain IPC handlers. Exposes repository methods to renderers as typed
 // invoke channels. All are synchronous reads from the in-memory sql.js database (fast).
@@ -21,17 +22,11 @@ const logger = log.scope('ipc:database')
 export function registerDatabaseHandlers(
   dbService: DatabaseService,
   backupService: BackupService,
+  getDraftState?: () => RankingDraftState,
 ): void {
-  ipcMain.handle('draft:getRankingData', (_event, data: { names: string[] }) => {
-    const names = Array.isArray(data?.names)
-      ? data.names.filter((name) => typeof name === 'string').slice(0, 64)
-      : []
-    return {
-      abilities: dbService.abilities.getAll(),
-      heroes: dbService.heroes.getAll(),
-      pairs: dbService.synergies.getSynergiesAmong(names),
-    }
-  })
+  ipcMain.handle('draft:getRankingData', (_event, data: RankingDataRequest) =>
+    getDraftRankingData(dbService, data, getDraftState?.()),
+  )
   // Hero domain
   ipcMain.handle('hero:getAll', () => {
     return dbService.heroes.getAll()

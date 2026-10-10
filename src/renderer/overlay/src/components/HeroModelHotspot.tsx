@@ -33,8 +33,6 @@ export function HeroModelHotspot({
 
   if (isMyModel) {
     className += ' is-my-model'
-  } else if (model.isGeneralTopTier) {
-    className += ' shimmer-gold'
   }
 
   const handleMouseEnter = useCallback(
@@ -55,8 +53,6 @@ export function HeroModelHotspot({
       id={`hero-model-hotspot-${model.heroOrder}`}
     >
       <DraftBadges guidance={guidance} />
-      {/* Corner marker: recommended because of the linked profile's stats */}
-      {model.isPersonallyDriven && <span className="personal-marker" />}
     </div>
   )
 }

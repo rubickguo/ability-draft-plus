@@ -1,5 +1,5 @@
 import { TopCombinationsPanel } from './components/TopCombinationsPanel'
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useOverlayData } from './hooks/use-overlay-data'
 import { ControlsPanel } from './components/ControlsPanel'
@@ -12,6 +12,8 @@ import { RolePanel } from './components/RolePanel'
 import { useAppStore } from './hooks/use-app-store'
 import i18n from './i18n'
 import { buildDraftBadges } from './draft-badges'
+import { recommendDraft } from '../../../core/domain/contextual-ranking'
+import { BestChoicePanel } from './components/BestChoicePanel'
 
 // @DEV-GUIDE: Root component for the overlay renderer. Renders on a transparent, click-through
 // window on top of the Dota 2 game. Body has pointer-events: none; interactive elements opt in.
@@ -41,12 +43,21 @@ function App(): React.ReactElement {
     snapshotIsError,
     triggerScan,
     resetOverlay,
+    refreshRanking,
   } = useOverlayData()
 
   const [showScanConfirm, setShowScanConfirm] = useState(false)
   const [showReportConfirm, setShowReportConfirm] = useState(false)
-  const [opPanelVisible, setOpPanelVisible] = useState(true)
-  const [trapPanelVisible, setTrapPanelVisible] = useState(true)
+  const [trapPanelVisible, setTrapPanelVisible] = useState(false)
+  const recommendation = useMemo(
+    () => (overlayData ? recommendDraft(overlayData) : null),
+    [overlayData],
+  )
+  const guidance = useMemo(
+    () =>
+      overlayData && recommendation ? buildDraftBadges(overlayData, recommendation) : undefined,
+    [overlayData, recommendation],
+  )
 
   // Escape key closes overlay
   useEffect(() => {
@@ -148,6 +159,7 @@ function App(): React.ReactElement {
           overlayData={overlayData}
           selectedSpotHeroOrder={selectedSpotHeroOrder}
           selectedModelHeroOrder={selectedModelHeroOrder}
+          guidance={guidance}
         />
       )}
 
@@ -205,20 +217,14 @@ function App(): React.ReactElement {
           hasScanData={overlayData?.scanData != null}
           mySpotSelected={selectedSpotHeroOrder !== null}
           autoTracking={overlayData?.autoDraftTrackingEnabled ?? false}
+          onSettingsChanged={refreshRanking}
         />
 
-        {overlayData?.scanData && <TopCombinationsPanel data={overlayData} />}
-        {/* OP Combinations Panel - z-index 9999 */}
-        {overlayData?.scanData && <div className="draft-badge-legend">{t('badges.legend')}</div>}
-        {overlayData && (
-          <CombinationPanel
-            variant="op"
-            groups={buildDraftBadges(overlayData).groups}
-            abilityCombinations={overlayData.opCombinations}
-            heroSynergies={overlayData.heroSynergies}
-            visible={opPanelVisible}
-            onToggle={() => setOpPanelVisible((v) => !v)}
-          />
+        {overlayData?.scanData && recommendation && (
+          <BestChoicePanel recommendation={recommendation} />
+        )}
+        {overlayData?.scanData && recommendation && (
+          <TopCombinationsPanel recommendation={recommendation} />
         )}
 
         {/* Trap Combinations Panel - z-index 9999 */}

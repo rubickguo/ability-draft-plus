@@ -380,7 +380,7 @@ export function registerIpcHandlers(
   )
 
   // Database domain (hero, ability, settings, backup)
-  registerDatabaseHandlers(dbService, backupService)
+  registerDatabaseHandlers(dbService, backupService, () => draftStore.getState())
 
   // Linked Windrun profile (personalized suggestions)
   registerPlayerHandlers(playerStatsService)

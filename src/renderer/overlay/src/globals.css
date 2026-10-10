@@ -951,7 +951,8 @@ body {
   opacity: 0.8;
 }
 .top-combinations {
-  width: 320px;
+  width: min(320px, calc(100vw - 30px));
+  flex-shrink: 0;
   color: #eee;
   background: #21182df0;
   border: 1px solid #896499;
@@ -959,7 +960,7 @@ body {
   padding: 8px;
 }
 .top-combinations-content {
-  max-height: 350px;
+  max-height: min(420px, 42vh);
   overflow-y: auto;
 }
 .top-combinations-note {
@@ -975,8 +976,8 @@ body {
 }
 .top-combinations li {
   display: grid;
-  grid-template-columns: 22px 1fr auto;
-  align-items: center;
+  grid-template-columns: 20px minmax(0, 1fr);
+  align-items: start;
   gap: 5px;
   padding: 7px 0;
   border-top: 1px solid #705b7755;
@@ -991,6 +992,7 @@ body {
   font-weight: bold;
 }
 .capture-mode .top-combinations,
+.capture-mode .best-choice-panel,
 .capture-mode .overlay-tooltip {
   visibility: hidden !important;
 }
@@ -1001,7 +1003,8 @@ body {
 }
 
 /* Top ten remain legible throughout the pulse; only the halo brightness changes. */
-.draft-rank-top, .draft-rank-ten {
+.draft-rank-top,
+.draft-rank-ten {
   min-width: 32px;
   text-align: center;
   font-size: 20px;
@@ -1013,8 +1016,15 @@ body {
   z-index: 2;
   border-radius: 6px;
 }
-.draft-rank-top { background: #ffce48; color: #211500; border-color: #fff4ba; }
-.draft-rank-ten { background: #006c79; border-color: #a5ffff; }
+.draft-rank-top {
+  background: #ffce48;
+  color: #211500;
+  border-color: #fff4ba;
+}
+.draft-rank-ten {
+  background: #006c79;
+  border-color: #a5ffff;
+}
 .draft-focus-ring {
   position: absolute;
   inset: -3px;
@@ -1023,13 +1033,230 @@ body {
   pointer-events: none;
   animation: draft-rank-breathe 2s ease-in-out infinite;
 }
-.draft-focus-gold { --rank-glow: #ffcf4d; }
-.draft-focus-teal { --rank-glow: #4ce9ff; animation-duration: 2.5s; }
-@keyframes draft-rank-breathe {
-  0%, 100% { opacity: .65; box-shadow: 0 0 5px 1px var(--rank-glow), inset 0 0 3px var(--rank-glow); }
-  50% { opacity: 1; box-shadow: 0 0 15px 3px var(--rank-glow), inset 0 0 7px var(--rank-glow); }
+.draft-focus-gold {
+  --rank-glow: #ffcf4d;
 }
-.capture-mode .draft-focus-ring { visibility: hidden !important; animation: none; }
+.draft-focus-teal {
+  --rank-glow: #4ce9ff;
+  animation-duration: 2.5s;
+}
+@keyframes draft-rank-breathe {
+  0%,
+  100% {
+    opacity: 0.65;
+    box-shadow:
+      0 0 5px 1px var(--rank-glow),
+      inset 0 0 3px var(--rank-glow);
+  }
+  50% {
+    opacity: 1;
+    box-shadow:
+      0 0 15px 3px var(--rank-glow),
+      inset 0 0 7px var(--rank-glow);
+  }
+}
+.capture-mode .draft-focus-ring {
+  visibility: hidden !important;
+  animation: none;
+}
 @media (prefers-reduced-motion: reduce) {
-  .draft-focus-ring { animation: none; opacity: 1; box-shadow: 0 0 8px var(--rank-glow); }
+  .draft-focus-ring {
+    animation: none;
+    opacity: 1;
+    box-shadow: 0 0 8px var(--rank-glow);
+  }
+}
+
+/* One recommendation surface: the card and map badges share the same ranking. */
+.best-choice-panel {
+  width: min(320px, calc(100vw - 30px));
+  flex-shrink: 0;
+  padding: 11px 12px;
+  border: 1px solid #d6b66b;
+  border-radius: 9px;
+  background: linear-gradient(135deg, #2e2b1cf7, #151e29f5);
+  color: #f8f3df;
+  box-shadow: 0 2px 12px #0005;
+}
+.best-choice-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #ffe08d;
+}
+.best-choice-heading > span {
+  font-size: 10px;
+  font-weight: 400;
+  color: #b8c1cd;
+}
+.best-choice-title {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin: 9px 0 6px;
+}
+.best-choice-title > strong {
+  font-size: 21px;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+.best-choice-number {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 30px;
+  height: 30px;
+  border: 1px solid #fff0af;
+  border-radius: 6px;
+  background: #ffce48;
+  color: #211500;
+  font-size: 22px;
+  font-weight: 900;
+}
+.best-choice-reasons {
+  color: #e1e7ed;
+  font-size: 12px;
+  line-height: 1.45;
+}
+.best-choice-reasons p {
+  margin: 3px 0;
+}
+.best-choice-followup {
+  margin-top: 7px;
+  color: #93f4df;
+  font-size: 12px;
+}
+.best-choice-alternatives {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 5px 10px;
+  margin-top: 9px;
+  padding-top: 7px;
+  border-top: 1px solid #9db0ca33;
+  color: #dae4ef;
+  font-size: 12px;
+}
+.best-choice-alternatives > span:first-child {
+  color: #9eacbf;
+}
+.best-choice-alternatives b {
+  color: #ffdf88;
+}
+.best-choice-wait {
+  margin-top: 8px;
+  color: #92d8eb;
+  font-size: 11px;
+  line-height: 1.4;
+}
+.best-choice-empty {
+  font-size: 12px;
+  line-height: 1.5;
+}
+.best-choice-notes {
+  margin-top: 7px;
+  color: #bac1cc;
+  font-size: 10px;
+  line-height: 1.45;
+}
+.best-choice-notes summary {
+  cursor: pointer;
+}
+.best-choice-notes p {
+  margin: 5px 0;
+}
+.combination-sort {
+  display: flex;
+  gap: 5px;
+  margin: 9px 0 6px;
+}
+.combination-sort button {
+  border: 1px solid #795e8b;
+  border-radius: 5px;
+  padding: 4px 8px;
+  color: #c9bfd5;
+  background: #392b48;
+  font-size: 11px;
+  cursor: pointer;
+}
+.combination-sort button[aria-pressed='true'] {
+  color: #fff;
+  border-color: #c6a5e5;
+  background: #604677;
+}
+.top-combinations-empty {
+  color: #c8bdcf;
+  font-size: 12px;
+  line-height: 1.5;
+  margin: 9px 0;
+}
+.threat-row-heading {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 7px;
+  color: #c9bed8;
+  font-size: 10px;
+}
+.threat-row-heading .threat-urgent {
+  color: #ffb782;
+}
+.threat-owned {
+  margin-top: 4px;
+  color: #c4bfcc;
+  font-size: 11px;
+}
+.threat-deny {
+  margin-top: 3px;
+  color: #ffd093;
+  font-weight: 700;
+  line-height: 1.4;
+}
+.threat-missing,
+.threat-names {
+  margin-top: 3px;
+  color: #eee9f6;
+  line-height: 1.4;
+}
+.threat-row-body {
+  overflow-wrap: anywhere;
+}
+.threat-stats {
+  color: #b6b0c1;
+  font-size: 10px;
+  margin-top: 4px;
+}
+.threat-reason {
+  color: #c5b9ce;
+  font-size: 10px;
+  line-height: 1.4;
+  margin-top: 3px;
+}
+.potential-combinations {
+  margin-top: 8px;
+  color: #cbb6e5;
+}
+.potential-combinations summary {
+  cursor: pointer;
+  font-size: 12px;
+  padding: 4px 0;
+}
+.tooltip-recommendation {
+  padding-bottom: 8px;
+  margin-bottom: 9px;
+  border-bottom: 1px solid #d6b66b66;
+}
+.tooltip-recommendation-rank {
+  color: #ffe096;
+  font-size: 15px;
+  font-weight: 800;
+  margin-bottom: 4px;
+}
+.tooltip-recommendation-reason {
+  color: #dce9f1;
+  font-size: 12px;
+  line-height: 1.5;
+  margin: 4px 0;
 }

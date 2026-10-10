@@ -37,10 +37,6 @@ export function AbilityHotspot({
     }
   } else if (slot.isUnknown) {
     className += ' unknown-slot'
-  } else if (slot.isSynergySuggestionForMySpot) {
-    className += ' shimmer-teal'
-  } else if (slot.isGeneralTopTier) {
-    className += ' shimmer-green'
   }
 
   const handleMouseEnter = useCallback(
@@ -60,9 +56,6 @@ export function AbilityHotspot({
       aria-label={slot.displayName}
     >
       <DraftBadges guidance={guidance} />
-      {/* Corner marker: this slot is recommended because of the linked
-          profile's personal stats (composes with any shimmer border) */}
-      {slot.isPersonallyDriven && <span className="personal-marker" />}
       {/* Always-on Aghanim's markers (aghsMarkersEnabled setting, payload-
           gated in scan-processor): strong Shard = blue diamond bottom-left,
           strong Scepter = violet dot bottom-right. Pool slots only. */}

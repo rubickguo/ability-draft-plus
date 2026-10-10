@@ -6,9 +6,8 @@ import type { AppSettings, RoleContextDisplay } from '@shared/types'
 // @DEV-GUIDE: Overlay quick control for role-aware suggestions. In AD you decide
 // your role AFTER seeing your model and the pool, so the mode must be togglable
 // mid-draft: Off / position numbers (multi-select = fixed mode) / Auto (dynamic).
-// Writes go through the regular settings IPC and take effect on the NEXT scan —
-// the same contract as My Spot / My Model selection (draft-handlers). The status
-// line reflects the LAST PROCESSED scan via OverlayDataPayload.roleContext.
+// Settings writes trigger a cached-data rerank immediately. Automatic team-role
+// inference still uses the latest accepted scan; manual positions need no capture.
 // Interactive element on a click-through window: hover opt-in via
 // useMousePassthrough, same as ControlsPanel.
 
@@ -25,6 +24,7 @@ interface RolePanelProps {
   /** Auto draft tracking hides the manual My Spot buttons, so a 'noSpot'
    * status must say "waiting for detection", not "select your spot". */
   autoTracking: boolean
+  onSettingsChanged?: () => void
 }
 
 export function RolePanel({
@@ -32,11 +32,13 @@ export function RolePanel({
   hasScanData,
   mySpotSelected,
   autoTracking,
+  onSettingsChanged,
 }: RolePanelProps): React.ReactElement {
   const { t } = useTranslation('overlay')
   const { onMouseEnter, onMouseLeave } = useMousePassthrough()
   const [mode, setMode] = useState<RoleMode>('off')
   const [positions, setPositions] = useState<number[]>([])
+  const [settingsError, setSettingsError] = useState(false)
 
   useEffect(() => {
     window.electronApi.invoke('settings:get').then((settings) => {
@@ -48,10 +50,16 @@ export function RolePanel({
   const apply = (nextMode: RoleMode, nextPositions: number[]): void => {
     setMode(nextMode)
     setPositions(nextPositions)
-    window.electronApi.invoke('settings:set', {
-      roleMode: nextMode,
-      roleFixedPositions: nextPositions,
-    })
+    window.electronApi
+      .invoke('settings:set', {
+        roleMode: nextMode,
+        roleFixedPositions: nextPositions,
+      })
+      .then(() => {
+        setSettingsError(false)
+        onSettingsChanged?.()
+      })
+      .catch(() => setSettingsError(true))
   }
 
   const handleOff = (): void => apply('off', positions)
@@ -67,8 +75,10 @@ export function RolePanel({
   }
 
   const status = ((): string => {
+    if (settingsError) return '设置未保存，请重试'
     if (mode === 'off') return t('role.offStatus')
     if (!hasScanData) return t('role.appliesNextScan')
+    if (mode === 'fixed') return t('role.scoringFor', { positions: positions.join('+') })
     // Context absent on a processed scan = that scan predates the mode toggle
     if (roleContext === undefined) return t('role.appliesNextScan')
     if (roleContext.status === 'noData') return t('role.needData')

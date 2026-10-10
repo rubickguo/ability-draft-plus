@@ -147,6 +147,28 @@ describe('performFullScrape', () => {
     expect(result.error).toBeUndefined()
   })
 
+  it('retains sample evidence from the same successful scrape, including high-skill counts', async () => {
+    await performFullScrape(deps, onProgress)
+    const writes = (deps.metadata.set as ReturnType<typeof vi.fn>).mock.calls
+      .filter(([key]) => key === 'draft_ranking_evidence_v1')
+    expect(writes.length).toBeGreaterThan(0)
+    const evidence = JSON.parse(writes.at(-1)![1])
+    expect(evidence.samples['ability:ursa_fury_swipes']).toMatchObject({ numPicks: 800, highSkillNumPicks: 150 })
+    expect(evidence.samples['hero:ursa']).toMatchObject({ numPicks: 1000, highSkillNumPicks: null })
+    expect(evidence.sourceDate).toBe((deps.metadata.setLastScrapeDate as ReturnType<typeof vi.fn>).mock.calls[0][0])
+    expect(evidence.patches).toEqual(['7.40c'])
+  })
+
+  it('invalidates old sample evidence before a partial database update can fail', async () => {
+    vi.mocked(deps.apiClient.fetchAbilityPairs).mockRejectedValue(new Error('pairs unavailable'))
+    const result = await performFullScrape(deps, onProgress)
+    expect(result.success).toBe(false)
+    expect(deps.metadata.set).toHaveBeenCalledWith('draft_ranking_evidence_v1', '')
+    const writes = (deps.metadata.set as ReturnType<typeof vi.fn>).mock.calls
+      .filter(([key]) => key === 'draft_ranking_evidence_v1')
+    expect(writes.at(-1)?.[1]).toBe('')
+  })
+
   it('reports progress through all phases', async () => {
     await performFullScrape(deps, onProgress)
 
