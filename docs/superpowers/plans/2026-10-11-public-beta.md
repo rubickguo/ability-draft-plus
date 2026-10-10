@@ -13,7 +13,9 @@
 - [x] Build from project source with public resources and no copied private API credentials. Verify fresh-profile startup, recognition resources, ranking and data-update behavior; disclose any unavailable integration accurately. Live challenge completion remains unverified and is documented.
 - [x] Add bilingual README, usage/download instructions, original-project credit, algorithm boundaries and labelled demonstration media. Preserve the original README for reference.
 - [x] Run necessary tests and production packaging; inspect release artifact contents and checksums. Keep raw screenshots, local databases, backups and secrets outside commits/releases. 1,125 unit tests, 2 E2E tests, node/web typecheck and packaged smoke passed; 1 unit test remains skipped.
-- [ ] Push the reviewed source to the fork default branch; publish a GitHub prerelease with installer, portable build where viable, checksums and known limitations.
-- [ ] Verify public README, asset links and PR; attach created PR to this chat and report exact outcomes.
+- [x] Push the reviewed source to the fork default branch; publish a GitHub prerelease with installer, portable build where viable, checksums and known limitations. Release: https://github.com/rubickguo/ability-draft-plus/releases/tag/v3.2.1-beta.1 (source a868dee).
+- [x] Verify public README, asset links and PR; attach created PR to this chat and report exact outcomes. Both executables returned HTTP 200 without authentication; GitHub asset digests match local SHA-256. PR #143 is open and attached.
+
+Clean Windows CI also passed typecheck, lint, unit/E2E tests, public packaging, packaged application verification and checksum generation: https://github.com/rubickguo/ability-draft-plus/actions/runs/38087169836
 
 User approved this plan in the conversation. Public PR and fork release are authorized. Community posts will be prepared as reusable copy; do not publish to unrelated accounts or groups without a specific destination.
