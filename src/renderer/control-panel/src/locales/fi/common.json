@@ -44,5 +44,7 @@
     "tooltip": "Tue kehittäjää Ko-fissa",
     "datdota": "Tue datdotaa",
     "datdotaTooltip": "Tue datdotaa (Windrun-data) Ko-fissa"
-  }
+  },
+  "close": "Close",
+  "unexpectedError": "An unexpected error occurred"
 }

@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useMemo } from 'react'
+import { localizeDisplayData } from '@shared/localization/dota-names'
 import type { StreamBoardState, StreamServerMessage } from '@shared/types/stream'
 import { STREAM_PROTOCOL_VERSION } from '@shared/constants/thresholds'
 import { buildDemoState } from '../demo'
@@ -51,5 +52,9 @@ export function useStreamState(): {
     return () => source.close()
   }, [])
 
-  return { board, connection }
+  const displayBoard = useMemo(
+    () => localizeDisplayData(board, board?.meta.language ?? 'en'),
+    [board],
+  )
+  return { board: displayBoard, connection }
 }

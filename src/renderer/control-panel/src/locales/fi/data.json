@@ -156,5 +156,14 @@
       "zoomTip": "Zoomaa rullaamalla, panoroi Ctrl+veto"
     }
   },
-  "noResults": "Ei tuloksia."
+  "noResults": "Ei tuloksia.",
+  "table": {
+    "rows": "{{count}} row(s)",
+    "page": "Page {{page}} of {{total}}",
+    "first": "First page",
+    "previous": "Previous page",
+    "next": "Next page",
+    "last": "Last page",
+    "filter": "Filter…"
+  }
 }

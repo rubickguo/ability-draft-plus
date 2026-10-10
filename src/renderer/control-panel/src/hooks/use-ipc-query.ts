@@ -1,4 +1,6 @@
-import { useState, useEffect, useReducer } from 'react'
+import { useState, useEffect, useReducer, useMemo } from 'react'
+import { useTranslation } from 'react-i18next'
+import { localizeDisplayData } from '@shared/localization/dota-names'
 import type { IpcInvokeMap } from '@shared/ipc/api'
 
 interface UseIpcQueryReturn<K extends keyof IpcInvokeMap> {
@@ -12,6 +14,7 @@ export function useIpcQuery<K extends keyof IpcInvokeMap>(
   channel: K,
   ...args: IpcInvokeMap[K]['request'] extends void ? [] : [IpcInvokeMap[K]['request']]
 ): UseIpcQueryReturn<K> {
+  const { i18n } = useTranslation()
   const [data, setData] = useState<IpcInvokeMap[K]['response'] | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -21,9 +24,10 @@ export function useIpcQuery<K extends keyof IpcInvokeMap>(
     let cancelled = false
     setLoading(true)
 
-    const request = args.length > 0
-      ? window.electronApi.invoke(channel, args[0] as never)
-      : window.electronApi.invoke(channel as never)
+    const request =
+      args.length > 0
+        ? window.electronApi.invoke(channel, args[0] as never)
+        : window.electronApi.invoke(channel as never)
 
     request
       .then((result) => {
@@ -40,9 +44,12 @@ export function useIpcQuery<K extends keyof IpcInvokeMap>(
         }
       })
 
-    return () => { cancelled = true }
+    return () => {
+      cancelled = true
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [channel, fetchKey])
 
-  return { data, loading, error, refetch }
+  const displayData = useMemo(() => localizeDisplayData(data, i18n.language), [data, i18n.language])
+  return { data: displayData, loading, error, refetch }
 }

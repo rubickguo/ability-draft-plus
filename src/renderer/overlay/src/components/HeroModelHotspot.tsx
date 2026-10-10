@@ -1,7 +1,10 @@
 import { useCallback } from 'react'
 import type { HeroModelDisplay, SlotCoordinate } from '@shared/types'
+import type { IconGuidance } from '../draft-badges'
+import { DraftBadges } from './DraftBadges'
 
 interface HeroModelHotspotProps {
+  guidance?: IconGuidance
   model: HeroModelDisplay
   coord: SlotCoordinate
   scaleFactor: number
@@ -11,6 +14,7 @@ interface HeroModelHotspotProps {
 }
 
 export function HeroModelHotspot({
+  guidance,
   model,
   coord,
   scaleFactor,
@@ -50,6 +54,7 @@ export function HeroModelHotspot({
       aria-label={model.heroDisplayName}
       id={`hero-model-hotspot-${model.heroOrder}`}
     >
+      <DraftBadges guidance={guidance} />
       {/* Corner marker: recommended because of the linked profile's stats */}
       {model.isPersonallyDriven && <span className="personal-marker" />}
     </div>

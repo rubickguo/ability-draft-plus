@@ -46,7 +46,7 @@
       "hero": "英雄",
       "winrate": "胜率",
       "hsWinrate": "高分段胜率",
-      "pickRate": "选取率",
+      "pickRate": "平均选取顺序",
       "ultimate": "终极技能"
     },
     "filterPlaceholder": "筛选技能...",
@@ -58,8 +58,8 @@
       "name": "英雄",
       "winrate": "胜率",
       "hsWinrate": "高分段胜率",
-      "pickRate": "选取率",
-      "hsPickRate": "高分段选取率"
+      "pickRate": "平均选取顺序",
+      "hsPickRate": "高分段平均选取顺序"
     },
     "filterPlaceholder": "筛选英雄...",
     "noResults": "未找到英雄。"
@@ -156,5 +156,14 @@
       "zoomTip": "滚轮缩放，Ctrl+拖动平移"
     }
   },
-  "noResults": "没有结果。"
+  "noResults": "没有结果。",
+  "table": {
+    "rows": "共 {{count}} 条",
+    "page": "第 {{page}} 页，共 {{total}} 页",
+    "first": "首页",
+    "previous": "上一页",
+    "next": "下一页",
+    "last": "末页",
+    "filter": "筛选…"
+  }
 }

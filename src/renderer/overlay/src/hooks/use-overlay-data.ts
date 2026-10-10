@@ -1,6 +1,9 @@
-import { useState, useEffect, useRef } from 'react'
-import type { OverlayDataPayload } from '@shared/types'
+import { useState, useEffect, useRef, useMemo } from 'react'
+import { useTranslation } from 'react-i18next'
+import { localizeDisplayData } from '@shared/localization/dota-names'
+import type { DraftRankingData, OverlayDataPayload } from '@shared/types'
 import i18n from '../i18n'
+import { availableNames } from '../ranking'
 
 // Safety net: if main never responds (hung enrichment, dead worker), unstick the UI.
 // Generous because a scan may include a lazy ML re-init (up to ~30s worst case).
@@ -34,6 +37,7 @@ export function useOverlayData(): OverlayState & {
   triggerScan: (isInitialScan: boolean) => void
   resetOverlay: () => void
 } {
+  const { i18n: languageContext } = useTranslation()
   const [overlayData, setOverlayData] = useState<OverlayDataPayload | null>(null)
   const [selectedSpotHeroOrder, setSelectedSpotHeroOrder] = useState<number | null>(null)
   const [selectedModelHeroOrder, setSelectedModelHeroOrder] = useState<number | null>(null)
@@ -92,7 +96,9 @@ export function useOverlayData(): OverlayState & {
     })
 
     const unsubSnapshot = window.electronApi.on('feedback:snapshotStatus', (data) => {
-      setSnapshotMessage(i18n.t(data.messageKey, data.params))
+      setSnapshotMessage(
+        i18n.t(data.messageKey, { ...data.params, ns: 'overlay', defaultValue: data.messageKey }),
+      )
       setSnapshotIsError(data.error ?? false)
     })
 
@@ -108,7 +114,9 @@ export function useOverlayData(): OverlayState & {
 
   const triggerScan = (isInitialScan: boolean): void => {
     if (!overlayData) {
-      console.warn('[overlay] triggerScan called but overlayData is null — initial data not received yet')
+      console.warn(
+        '[overlay] triggerScan called but overlayData is null — initial data not received yet',
+      )
       return
     }
     setScanState('scanning')
@@ -117,7 +125,7 @@ export function useOverlayData(): OverlayState & {
     scanTimeoutRef.current = setTimeout(() => {
       scanTimeoutRef.current = null
       setScanState('error')
-      setScanError(i18n.t('status.timeoutMessage'))
+      setScanError(i18n.t('status.timeoutMessage', { ns: 'overlay' }))
     }, SCAN_TIMEOUT_MS)
     // CRITICAL: the scanning state hides all overlay decorations (capture-mode CSS).
     // Wait two frames so the compositor has actually painted their removal before
@@ -140,14 +148,64 @@ export function useOverlayData(): OverlayState & {
     setScanError(null)
     setSelectedSpotHeroOrder(null)
     setSelectedModelHeroOrder(null)
-    setOverlayData((prev) => prev ? { ...prev, scanData: null, opCombinations: [], trapCombinations: [], heroSynergies: [], heroTraps: [], heroModels: [], heroesForMySpotUI: [] } : null)
+    setOverlayData((prev) =>
+      prev
+        ? {
+            ...prev,
+            scanData: null,
+            opCombinations: [],
+            trapCombinations: [],
+            heroSynergies: [],
+            heroTraps: [],
+            heroModels: [],
+            heroesForMySpotUI: [],
+          }
+        : null,
+    )
     // Clear the main-process draft session too, so a later Rescan doesn't diff
     // against this draft's cached pool.
     window.electronApi.send('overlay:reset')
   }
 
+  const [ranking, setRanking] = useState<{
+    scan: OverlayDataPayload['scanData']
+    data: DraftRankingData
+  } | null>(null)
+  useEffect(() => {
+    if (!overlayData?.scanData) return
+    let cancelled = false
+    const scan = overlayData.scanData
+    window.electronApi
+      .invoke('draft:getRankingData', { names: availableNames(overlayData) })
+      .then((data) => {
+        if (!cancelled) setRanking({ scan, data })
+      })
+      .catch((error) => {
+        if (!cancelled) {
+          setRanking(null)
+          console.error('Draft rankings unavailable', error)
+        }
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [overlayData?.scanData])
+
+  const displayData = useMemo(
+    () =>
+      localizeDisplayData(
+        overlayData
+          ? {
+              ...overlayData,
+              rankingData: ranking?.scan === overlayData.scanData ? ranking?.data : undefined,
+            }
+          : null,
+        languageContext.language,
+      ),
+    [overlayData, ranking, languageContext.language],
+  )
   return {
-    overlayData,
+    overlayData: displayData,
     selectedSpotHeroOrder,
     selectedModelHeroOrder,
     scanState,

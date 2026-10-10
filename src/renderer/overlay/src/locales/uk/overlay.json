@@ -122,5 +122,23 @@
     "appliesNextScan": "Застосується під час наступного сканування",
     "needData": "Оновіть дані, щоб увімкнути",
     "waitingSpot": "Очікування автовизначення слота…"
+  },
+  "badges": {
+    "rankTitle": "Current recommendation rank #{{rank}}",
+    "legend": "Score = 60% HS winrate + 40% pick-order score (positions 1–50). Abilities and models share one ranking. Gold: top 3; teal: 4–10. Picked choices excluded after each scan.",
+    "combinations": "Available strong combinations",
+    "abilityPrefix": "A",
+    "modelPrefix": "H",
+    "fallback": "HS data missing; overall winrate used: {{value}}%",
+    "hs": "High-skill winrate: {{value}}%",
+    "score": "Recommendation score: {{value}} (not predicted winrate)"
+  },
+  "topCombinations": {
+    "title": "Top 10 current skill pairs by winrate",
+    "show": "Show top 10 skill pairs",
+    "hide": "Hide top 10 skill pairs",
+    "note": "Both skills must remain available. Ranked by recorded pair winrate.",
+    "loading": "Loading pair data…",
+    "empty": "No recorded pairs among available skills."
   }
 }

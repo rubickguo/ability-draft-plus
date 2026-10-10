@@ -62,7 +62,7 @@ function ArtLayer({ name }: { name: string }) {
 }
 
 function App(): React.ReactElement {
-  const { t } = useTranslation()
+  const { t } = useTranslation('translation')
   const { board, connection } = useStreamState()
   const demo = isDemoMode()
   const edit = param('edit') === '1'
@@ -100,23 +100,12 @@ function App(): React.ReactElement {
   return (
     <div className={`board bg-${bgMode()}`}>
       <ArtLayer name="board-bg" />
-      <TopBar
-        title={param('title')}
-        gsi={board.gsi}
-        connection={connection}
-        demo={demo}
-      />
+      <TopBar title={param('title')} gsi={board.gsi} connection={connection} demo={demo} />
 
       <main className="board-main">
-        <PlayerColumn
-          team="radiant"
-          players={board.players.filter((p) => p.team === 'radiant')}
-        />
+        <PlayerColumn team="radiant" players={board.players.filter((p) => p.team === 'radiant')} />
         <PoolBoard heroes={board.heroes} />
-        <PlayerColumn
-          team="dire"
-          players={board.players.filter((p) => p.team === 'dire')}
-        />
+        <PlayerColumn team="dire" players={board.players.filter((p) => p.team === 'dire')} />
       </main>
 
       <PickTicker board={board} />

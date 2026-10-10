@@ -3,6 +3,7 @@ import type { EnrichedScanSlot, HeroModelDisplay, OverlayDataPayload } from '@sh
 import { AbilityHotspot } from './AbilityHotspot'
 import { HeroModelHotspot } from './HeroModelHotspot'
 import { Tooltip, type TooltipData } from './Tooltip'
+import { buildDraftBadges } from '../draft-badges'
 
 interface HotspotLayerProps {
   overlayData: OverlayDataPayload
@@ -18,21 +19,15 @@ export function HotspotLayer({
   const [tooltipData, setTooltipData] = useState<TooltipData | null>(null)
   const [tooltipAnchor, setTooltipAnchor] = useState<DOMRect | null>(null)
 
-  const handleAbilityHover = useCallback(
-    (slot: EnrichedScanSlot, rect: DOMRect) => {
-      setTooltipData({ type: 'ability', slot })
-      setTooltipAnchor(rect)
-    },
-    [],
-  )
+  const handleAbilityHover = useCallback((slot: EnrichedScanSlot, rect: DOMRect) => {
+    setTooltipData({ type: 'ability', slot })
+    setTooltipAnchor(rect)
+  }, [])
 
-  const handleHeroHover = useCallback(
-    (model: HeroModelDisplay, rect: DOMRect) => {
-      setTooltipData({ type: 'hero', model })
-      setTooltipAnchor(rect)
-    },
-    [],
-  )
+  const handleHeroHover = useCallback((model: HeroModelDisplay, rect: DOMRect) => {
+    setTooltipData({ type: 'hero', model })
+    setTooltipAnchor(rect)
+  }, [])
 
   const handleLeave = useCallback(() => {
     setTooltipData(null)
@@ -42,6 +37,7 @@ export function HotspotLayer({
   if (!overlayData.scanData) return null
 
   const { scanData, scaleFactor, heroModels, modelsCoords } = overlayData
+  const guidance = buildDraftBadges(overlayData)
 
   return (
     <>
@@ -49,6 +45,7 @@ export function HotspotLayer({
       {scanData.ultimates.map((slot, i) => (
         <AbilityHotspot
           key={`ult-${i}`}
+          guidance={slot.name ? guidance.abilities.get(slot.name) : undefined}
           slot={slot}
           scaleFactor={scaleFactor}
           isSelectedAbility={false}
@@ -62,6 +59,7 @@ export function HotspotLayer({
       {scanData.standard.map((slot, i) => (
         <AbilityHotspot
           key={`std-${i}`}
+          guidance={slot.name ? guidance.abilities.get(slot.name) : undefined}
           slot={slot}
           scaleFactor={scaleFactor}
           isSelectedAbility={false}
@@ -75,6 +73,11 @@ export function HotspotLayer({
       {scanData.selectedAbilities.map((slot, i) => (
         <AbilityHotspot
           key={`sel-${i}`}
+          guidance={
+            slot.hero_order === selectedSpotHeroOrder && slot.name
+              ? guidance.abilities.get(slot.name)
+              : undefined
+          }
           slot={slot}
           scaleFactor={scaleFactor}
           isSelectedAbility
@@ -91,6 +94,7 @@ export function HotspotLayer({
         return (
           <HeroModelHotspot
             key={`hero-${model.heroOrder}`}
+            guidance={guidance.models.get(model.heroOrder)}
             model={model}
             coord={coord}
             scaleFactor={scaleFactor}
@@ -102,7 +106,17 @@ export function HotspotLayer({
       })}
 
       {/* Singleton Tooltip */}
-      <Tooltip data={tooltipData} anchorRect={tooltipAnchor} />
+      <Tooltip
+        data={tooltipData}
+        anchorRect={tooltipAnchor}
+        guidance={
+          tooltipData?.type === 'hero'
+            ? guidance.models.get(tooltipData.model.heroOrder)
+            : tooltipData?.slot.name
+              ? guidance.abilities.get(tooltipData.slot.name)
+              : undefined
+        }
+      />
     </>
   )
 }

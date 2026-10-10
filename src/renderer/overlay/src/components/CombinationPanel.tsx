@@ -1,8 +1,10 @@
 import { useTranslation } from 'react-i18next'
 import { useMousePassthrough } from '../hooks/use-mouse-passthrough'
 import type { SynergyPairDisplay, HeroSynergyDisplay } from '@shared/types'
+import type { ComboGroup } from '../draft-badges'
 
 interface CombinationPanelProps {
+  groups?: ComboGroup[]
   variant: 'op' | 'trap'
   abilityCombinations: SynergyPairDisplay[]
   heroSynergies: HeroSynergyDisplay[]
@@ -12,18 +14,19 @@ interface CombinationPanelProps {
 
 function formatWr(wr: number): string {
   const n = typeof wr === 'number' ? wr : Number(wr)
-  if (Number.isNaN(n)) return 'N/A'
+  if (Number.isNaN(n)) return '—'
   return `${(n * 100).toFixed(1)}%`
 }
 
 export function CombinationPanel({
+  groups = [],
   variant,
   abilityCombinations,
   heroSynergies,
   visible,
   onToggle,
 }: CombinationPanelProps): React.ReactElement | null {
-  const { t } = useTranslation()
+  const { t } = useTranslation('overlay')
   const { onMouseEnter, onMouseLeave } = useMousePassthrough()
 
   const hasContent = abilityCombinations.length > 0 || heroSynergies.length > 0
@@ -70,12 +73,30 @@ export function CombinationPanel({
 
       {abilityCombinations.map((combo, i) => (
         <div key={`a-${i}`} className="combination-panel-item">
+          {variant === 'op' &&
+            groups
+              .filter(
+                (g) =>
+                  g.key ===
+                  'skills:' +
+                    [
+                      combo.ability1Name ?? combo.ability1DisplayName,
+                      combo.ability2Name ?? combo.ability2DisplayName,
+                    ]
+                      .sort()
+                      .join('|'),
+              )
+              .map((g) => (
+                <span key={g.key} className="draft-combo-badge draft-combo-inline">
+                  {g.label}
+                </span>
+              ))}
           {itemPrefix}
           <span className={combo.inflatedSynergy ? 'combination-panel-inflated' : ''}>
-            {combo.inflatedSynergy ? '~' : ''}{combo.ability1DisplayName}
+            {combo.inflatedSynergy ? '~' : ''}
+            {combo.ability1DisplayName}
           </span>{' '}
-          + <span>{combo.ability2DisplayName}</span>{' '}
-          ({formatWr(combo.synergyWinrate)})
+          + <span>{combo.ability2DisplayName}</span> ({formatWr(combo.synergyWinrate)})
           {combo.suggestedThird && (
             <span
               className="combination-panel-third"
@@ -95,9 +116,19 @@ export function CombinationPanel({
 
       {heroSynergies.map((syn, i) => (
         <div key={`h-${i}`} className="combination-panel-item combination-panel-hero-synergy">
+          {variant === 'op' &&
+            groups
+              .filter(
+                (g) => g.key === 'model:' + syn.heroDisplayName + '|' + syn.abilityDisplayName,
+              )
+              .map((g) => (
+                <span key={g.key} className="draft-combo-badge draft-combo-inline">
+                  {g.label}
+                </span>
+              ))}
           {itemPrefix}
-          <span>{syn.heroDisplayName}</span> + <span>{syn.abilityDisplayName}</span>{' '}
-          ({formatWr(syn.synergyWinrate)})
+          <span>{syn.heroDisplayName}</span> + <span>{syn.abilityDisplayName}</span> (
+          {formatWr(syn.synergyWinrate)})
         </div>
       ))}
     </div>

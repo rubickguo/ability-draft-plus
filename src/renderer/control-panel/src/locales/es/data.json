@@ -156,5 +156,14 @@
       "zoomTip": "Rueda para hacer zoom, Ctrl+arrastrar para desplazar"
     }
   },
-  "noResults": "Sin resultados."
+  "noResults": "Sin resultados.",
+  "table": {
+    "rows": "{{count}} row(s)",
+    "page": "Page {{page}} of {{total}}",
+    "first": "First page",
+    "previous": "Previous page",
+    "next": "Next page",
+    "last": "Last page",
+    "filter": "Filter…"
+  }
 }

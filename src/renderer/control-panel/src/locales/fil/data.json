@@ -156,5 +156,14 @@
       "zoomTip": "Mag-scroll para mag-zoom, Ctrl+drag para mag-pan"
     }
   },
-  "noResults": "Walang resulta."
+  "noResults": "Walang resulta.",
+  "table": {
+    "rows": "{{count}} row(s)",
+    "page": "Page {{page}} of {{total}}",
+    "first": "First page",
+    "previous": "Previous page",
+    "next": "Next page",
+    "last": "Last page",
+    "filter": "Filter…"
+  }
 }

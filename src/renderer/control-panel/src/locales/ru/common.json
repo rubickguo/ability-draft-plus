@@ -44,5 +44,7 @@
     "tooltip": "Поддержать разработчика на Ko-fi",
     "datdota": "Поддержать datdota",
     "datdotaTooltip": "Поддержать datdota (данные Windrun) на Ko-fi"
-  }
+  },
+  "close": "Close",
+  "unexpectedError": "An unexpected error occurred"
 }

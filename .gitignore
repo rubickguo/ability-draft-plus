@@ -67,3 +67,8 @@ colab/**
 # Python bytecode (training pipeline)
 __pycache__/
 twitch/frontend/certs/
+
+# Local verification artifacts and installed-app backups
+output/
+*-results.txt
+*typecheck.txt

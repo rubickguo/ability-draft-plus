@@ -1,3 +1,4 @@
+import { TopCombinationsPanel } from './components/TopCombinationsPanel'
 import { useState, useEffect, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useOverlayData } from './hooks/use-overlay-data'
@@ -10,6 +11,7 @@ import { DynamicButtons } from './components/DynamicButtons'
 import { RolePanel } from './components/RolePanel'
 import { useAppStore } from './hooks/use-app-store'
 import i18n from './i18n'
+import { buildDraftBadges } from './draft-badges'
 
 // @DEV-GUIDE: Root component for the overlay renderer. Renders on a transparent, click-through
 // window on top of the Dota 2 game. Body has pointer-events: none; interactive elements opt in.
@@ -28,7 +30,7 @@ import i18n from './i18n'
 const HIDE_SCAN_CONFIRM_KEY = 'hideInitialScanConfirm'
 
 function App(): React.ReactElement {
-  const { t } = useTranslation()
+  const { t } = useTranslation('overlay')
   const {
     overlayData,
     selectedSpotHeroOrder,
@@ -136,8 +138,7 @@ function App(): React.ReactElement {
         ? t('status.error', { message: scanError })
         : null
 
-  const statusVariant =
-    scanState === 'error' ? ('error' as const) : ('info' as const)
+  const statusVariant = scanState === 'error' ? ('error' as const) : ('info' as const)
 
   return (
     <div className={`overlay-root${scanState === 'scanning' ? ' capture-mode' : ''}`}>
@@ -206,10 +207,13 @@ function App(): React.ReactElement {
           autoTracking={overlayData?.autoDraftTrackingEnabled ?? false}
         />
 
+        {overlayData?.scanData && <TopCombinationsPanel data={overlayData} />}
         {/* OP Combinations Panel - z-index 9999 */}
+        {overlayData?.scanData && <div className="draft-badge-legend">{t('badges.legend')}</div>}
         {overlayData && (
           <CombinationPanel
             variant="op"
+            groups={buildDraftBadges(overlayData).groups}
             abilityCombinations={overlayData.opCombinations}
             heroSynergies={overlayData.heroSynergies}
             visible={opPanelVisible}
@@ -231,10 +235,7 @@ function App(): React.ReactElement {
 
       {/* Status Toast - z-index 10001 */}
       <StatusToast message={statusMessage} variant={statusVariant} />
-      <StatusToast
-        message={snapshotMessage}
-        variant={snapshotIsError ? 'error' : 'success'}
-      />
+      <StatusToast message={snapshotMessage} variant={snapshotIsError ? 'error' : 'success'} />
 
       {/* Scan Confirm Modal - z-index 10005 */}
       <ConfirmModal

@@ -1,3 +1,4 @@
+import i18n from '@/i18n'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Check, RotateCcw, Send } from 'lucide-react'
@@ -30,7 +31,9 @@ export function StepVerify({
 }: StepVerifyProps) {
   const { t } = useTranslation('data')
   const [submitting, setSubmitting] = useState(false)
-  const [submitResult, setSubmitResult] = useState<{ success: boolean; message: string } | null>(null)
+  const [submitResult, setSubmitResult] = useState<{ success: boolean; message: string } | null>(
+    null,
+  )
 
   const legendItems = [
     { label: t('mapper.verify.ultimates'), color: STROKE_COLORS.ultimates },
@@ -53,7 +56,7 @@ export function StepVerify({
         success: result.success,
         message: result.success
           ? (result.message ?? t('mapper.report.success'))
-          : (result.error ?? t('mapper.report.error', { error: 'Unknown error' })),
+          : (result.error ?? t('mapper.report.error', { error: i18n.t('unexpectedError') })),
       })
       if (result.success) {
         setTimeout(() => onReportSubmitted(), 2000)
@@ -110,11 +113,7 @@ export function StepVerify({
           {t('mapper.verify.redo')}
         </Button>
         {mode === 'user' && (
-          <Button
-            variant="destructive"
-            onClick={handleReportFailed}
-            disabled={submitting}
-          >
+          <Button variant="destructive" onClick={handleReportFailed} disabled={submitting}>
             <Send className="h-4 w-4 mr-2" />
             {submitting ? t('mapper.report.submitting') : t('mapper.report.button')}
           </Button>

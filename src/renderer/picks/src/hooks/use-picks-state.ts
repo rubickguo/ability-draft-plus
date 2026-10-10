@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useMemo } from 'react'
+import { localizeDisplayData } from '@shared/localization/dota-names'
 import type { PicksStateMessage, PicksViewState } from '@shared/types/stream'
 import { STREAM_PROTOCOL_VERSION } from '@shared/constants/thresholds'
 import { buildDemoPicksState } from '../demo'
@@ -52,5 +53,9 @@ export function usePicksState(): {
     return () => source.close()
   }, [])
 
-  return { picks, connection }
+  const displayPicks = useMemo(
+    () => localizeDisplayData(picks, picks?.meta.language ?? 'en'),
+    [picks],
+  )
+  return { picks: displayPicks, connection }
 }

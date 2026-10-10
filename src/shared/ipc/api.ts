@@ -36,6 +36,10 @@ export interface FeedbackStatus {
 
 // Request/Response type mapping for invoke (two-way) channels
 export interface IpcInvokeMap {
+  'draft:getRankingData': {
+    request: { names: string[] }
+    response: import('../types').DraftRankingData
+  }
   'hero:getAll': { request: void; response: Hero[] }
   'hero:getById': { request: { id: number }; response: Hero | null }
   'ability:getDetails': { request: { names: string[] }; response: AbilityDetail[] }

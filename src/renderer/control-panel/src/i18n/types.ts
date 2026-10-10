@@ -1,3 +1,5 @@
+import type enStream from '../../../stream/src/locales/en.json'
+import type enOverlay from '../../../overlay/src/locales/en/overlay.json'
 import type enCommon from '../locales/en/common.json'
 import type enSettings from '../locales/en/settings.json'
 import type enDashboard from '../locales/en/dashboard.json'
@@ -10,6 +12,8 @@ declare module 'i18next' {
   interface CustomTypeOptions {
     defaultNS: 'common'
     resources: {
+      translation: typeof enStream
+      overlay: typeof enOverlay
       common: typeof enCommon
       settings: typeof enSettings
       dashboard: typeof enDashboard

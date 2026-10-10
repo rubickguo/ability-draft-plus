@@ -1,3 +1,4 @@
+import i18n from '@/i18n'
 import { useEffect, useState, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Check, Crosshair, Send, AlertTriangle } from 'lucide-react'
@@ -35,19 +36,21 @@ export function StepAutoDetect({
   const [layout, setLayout] = useState<ResolutionLayout | null>(null)
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
-  const [submitResult, setSubmitResult] = useState<{ success: boolean; message: string } | null>(null)
+  const [submitResult, setSubmitResult] = useState<{ success: boolean; message: string } | null>(
+    null,
+  )
 
   useEffect(() => {
     let cancelled = false
-    window.electronApi
-      .invoke('resolution:getLayout', { resolution })
-      .then((result) => {
-        if (cancelled) return
-        setSource(result.source)
-        setLayout(result.layout)
-        setLoading(false)
-      })
-    return () => { cancelled = true }
+    window.electronApi.invoke('resolution:getLayout', { resolution }).then((result) => {
+      if (cancelled) return
+      setSource(result.source)
+      setLayout(result.layout)
+      setLoading(false)
+    })
+    return () => {
+      cancelled = true
+    }
   }, [resolution])
 
   const handleSubmitScreenshot = async () => {
@@ -63,7 +66,7 @@ export function StepAutoDetect({
         success: result.success,
         message: result.success
           ? (result.message ?? t('mapper.report.success'))
-          : (result.error ?? t('mapper.report.error', { error: 'Unknown error' })),
+          : (result.error ?? t('mapper.report.error', { error: i18n.t('unexpectedError') })),
       })
       if (result.success) {
         setTimeout(() => onReportSubmitted(), 2000)
@@ -121,9 +124,7 @@ export function StepAutoDetect({
             <p className="font-medium text-yellow-700 dark:text-yellow-400">
               {t('mapper.autoDetect.autoScaleWarningTitle')}
             </p>
-            <p className="text-muted-foreground">
-              {t('mapper.autoDetect.autoScaleWarningDetail')}
-            </p>
+            <p className="text-muted-foreground">{t('mapper.autoDetect.autoScaleWarningDetail')}</p>
           </div>
         </div>
       )}

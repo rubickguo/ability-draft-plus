@@ -225,6 +225,7 @@ export interface EnrichedScanSlot extends ScanResult {
 }
 
 export interface OverlayDataPayload {
+  rankingData?: DraftRankingData
   initialSetup: boolean
   scanData: {
     ultimates: EnrichedScanSlot[]
@@ -259,6 +260,17 @@ export interface OverlayDataPayload {
   /** Role-aware suggestions context (absent when roleMode==='off' or My Spot is
    * unknown — the payload is then bit-identical to the role-less path). */
   roleContext?: RoleContextDisplay
+}
+
+export interface DraftRankingData {
+  abilities: AbilityDetail[]
+  heroes: Hero[]
+  pairs: {
+    ability1Name: string
+    ability2Name: string
+    synergyWinrate: number
+    synergyIncrease: number | null
+  }[]
 }
 
 /** What the role layer decided this scan — drives the overlay's role UI. */

@@ -44,5 +44,7 @@
     "tooltip": "Suportahan ang developer sa Ko-fi",
     "datdota": "Suportahan ang datdota",
     "datdotaTooltip": "Suportahan ang datdota (Windrun data) sa Ko-fi"
-  }
+  },
+  "close": "Close",
+  "unexpectedError": "An unexpected error occurred"
 }

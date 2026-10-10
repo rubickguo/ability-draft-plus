@@ -22,6 +22,16 @@ export function registerDatabaseHandlers(
   dbService: DatabaseService,
   backupService: BackupService,
 ): void {
+  ipcMain.handle('draft:getRankingData', (_event, data: { names: string[] }) => {
+    const names = Array.isArray(data?.names)
+      ? data.names.filter((name) => typeof name === 'string').slice(0, 64)
+      : []
+    return {
+      abilities: dbService.abilities.getAll(),
+      heroes: dbService.heroes.getAll(),
+      pairs: dbService.synergies.getSynergiesAmong(names),
+    }
+  })
   // Hero domain
   ipcMain.handle('hero:getAll', () => {
     return dbService.heroes.getAll()

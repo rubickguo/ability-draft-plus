@@ -54,7 +54,7 @@
   "changeMyModel": "更改",
   "tooltip": {
     "winrate": "胜率：{{value}}",
-    "pickRate": "选取率：{{value}}",
+    "pickRate": "平均选取顺序：{{value}}",
     "personalStats": "你的数据：{{games}} 场，胜率 {{value}}",
     "strongSynergies": "强协同技能",
     "heroSynergies": "英雄协同技能",
@@ -122,5 +122,23 @@
     "appliesNextScan": "将在下次扫描时生效",
     "needData": "请更新数据以启用",
     "waitingSpot": "正在等待自动检测席位…"
+  },
+  "badges": {
+    "rankTitle": "当前推荐排名 #{{rank}}",
+    "legend": "推荐分＝60% 高水平胜率＋40% 选取顺序分（1–50顺位归一化）。技能与模型统一排名；金色前3，青色4–10。每次扫描排除已选项并重排。",
+    "combinations": "可搭配的强力组合",
+    "abilityPrefix": "技",
+    "modelPrefix": "模",
+    "fallback": "高水平数据缺失，使用总体胜率：{{value}}%",
+    "hs": "高水平胜率：{{value}}%",
+    "score": "推荐分：{{value}}（不是预测胜率）"
+  },
+  "topCombinations": {
+    "title": "当前技能组合胜率前十",
+    "show": "显示组合胜率前十",
+    "hide": "隐藏组合胜率前十",
+    "note": "仅统计本次仍可选的双技能组合，按数据库已收录的组合胜率降序。",
+    "loading": "正在读取组合数据…",
+    "empty": "当前可选技能中暂无已收录的组合。"
   }
 }

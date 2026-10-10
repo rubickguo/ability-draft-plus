@@ -11,14 +11,16 @@
   "pool": {
     "ultimates": "Ultimate Abilities",
     "standard": "Standard Abilities",
-    "modelPicked": "Drafted"
+    "modelPicked": "Drafted",
+    "label": "Ability pool"
   },
   "panels": {
     "topWinrate": "Top Winrate",
     "opCombos": "Strongest Combos",
     "trapCombos": "Trap Combos",
     "topTier": "Top Picks",
-    "latestPicks": "Latest Picks"
+    "latestPicks": "Latest Picks",
+    "label": "Draft statistics"
   },
   "avgPick": "Usually picked around #{{n}}",
   "player": "Player {{num}}",

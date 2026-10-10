@@ -44,5 +44,7 @@
     "tooltip": "在 Ko-fi 上支持开发者",
     "datdota": "支持 datdota",
     "datdotaTooltip": "在 Ko-fi 上支持 datdota（Windrun 数据来源）"
-  }
+  },
+  "close": "关闭",
+  "unexpectedError": "发生意外错误"
 }

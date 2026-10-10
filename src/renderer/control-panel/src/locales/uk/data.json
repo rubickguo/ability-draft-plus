@@ -156,5 +156,14 @@
       "zoomTip": "Прокручування для масштабування, Ctrl+перетягування для переміщення"
     }
   },
-  "noResults": "Нічого не знайдено."
+  "noResults": "Нічого не знайдено.",
+  "table": {
+    "rows": "{{count}} row(s)",
+    "page": "Page {{page}} of {{total}}",
+    "first": "First page",
+    "previous": "Previous page",
+    "next": "Next page",
+    "last": "Last page",
+    "filter": "Filter…"
+  }
 }
