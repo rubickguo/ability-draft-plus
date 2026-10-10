@@ -19,7 +19,9 @@ export interface MetadataRepository {
   setLastScrapeDate(date: string): void
 }
 
-export function createMetadataRepository(db: SQLJsDatabase): MetadataRepository {
+export function createMetadataRepository<TSchema extends Record<string, unknown>>(
+  db: SQLJsDatabase<TSchema>,
+): MetadataRepository {
   function get(key: string): string | null {
     const row = db.select().from(metadata).where(eq(metadata.key, key)).get()
     return row?.value ?? null

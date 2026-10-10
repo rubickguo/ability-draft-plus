@@ -61,7 +61,7 @@ function PlayerCard({ player }: { player: StreamPlayerRow }) {
       {score !== null && score.score !== null && (
         <div
           className={`player-score confidence-${score.confidence}`}
-          title={`${t('score.label')} (${t(`score.confidence.${score.confidence}`)})`}
+          title={`${t('score.label')} (${t(`score.confidence.${score.confidence}`, { defaultValue: score.confidence })})`}
         >
           {(score.score * 100).toFixed(0)}
         </div>

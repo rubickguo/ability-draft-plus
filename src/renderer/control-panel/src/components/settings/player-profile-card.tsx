@@ -170,7 +170,7 @@ export function PlayerProfileCard() {
         {needsScrape && (
           <p className="text-xs text-amber-500">{t('personalStats.scrapeHint')}</p>
         )}
-        {errorKey && <p className="text-xs text-destructive">{t(errorKey)}</p>}
+        {errorKey && <p className="text-xs text-destructive">{t(errorKey, { defaultValue: errorKey })}</p>}
         {statusMessage && (
           <p className="text-xs text-muted-foreground">{statusMessage}</p>
         )}

@@ -87,7 +87,7 @@ export function TwitchCard() {
       setTestMessage(
         result.success
           ? { text: t('twitch.testSent'), error: false }
-          : { text: t(result.errorKey ?? 'twitch.errorPublishFailed'), error: true },
+          : { text: t(result.errorKey ?? 'twitch.errorPublishFailed', { defaultValue: t('twitch.errorPublishFailed') }), error: true },
       )
     } finally {
       setBusy(false)
@@ -161,7 +161,7 @@ export function TwitchCard() {
             </div>
             {pairError && (
               <p className="text-sm text-destructive" role="alert">
-                {t(pairError)}
+                {t(pairError, { defaultValue: pairError })}
               </p>
             )}
           </>
@@ -177,7 +177,7 @@ export function TwitchCard() {
 
             {errorKey && (
               <p className="text-sm text-destructive" role="alert">
-                {t(errorKey)}
+                {t(errorKey, { defaultValue: errorKey })}
               </p>
             )}
 

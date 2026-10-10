@@ -71,6 +71,16 @@
     "running": "正在更新...",
     "lastUpdated": "上次更新：",
     "never": "从未",
+    "browser": {
+      "retry": "已完成验证，重试更新",
+      "verification": "Windrun 要求进行网站验证。请在弹出的 Windrun 窗口中自行完成验证，保持该窗口打开，返回这里点击“已完成验证，重试更新”。必要数据下载完成前会保留原有统计。",
+      "loading": "请等待 Windrun 验证页面加载，按网站要求自行完成验证后再重试。",
+      "closed": "验证窗口已关闭。点击重试可重新打开；完成验证后再点击一次更新。",
+      "timeout": "Windrun 浏览器请求超时。请检查验证窗口后重试。",
+      "failed": "Windrun 浏览器请求失败。请查看弹出的网页，如有验证要求请自行完成，然后重试。",
+      "openFailed": "无法打开 Windrun 验证窗口。请点击重试。",
+      "unsupported": "此验证窗口只支持 Windrun 官方数据接口。"
+    },
     "liquipedia": {
       "title": "Liquipedia 数据补充",
       "description": "从 Liquipedia 获取技能顺序数据（Q/W/E/R）。请求频率限制为每 31 秒一次。",

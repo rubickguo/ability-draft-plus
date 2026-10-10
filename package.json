@@ -1,7 +1,7 @@
 {
-  "name": "ability-draft-plus",
-  "version": "3.2.0",
-  "description": "AI-powered overlay for Dota 2 Ability Draft mode",
+  "name": "ability-draft-plus-cn",
+  "version": "3.2.1-beta.1",
+  "description": "Chinese community Beta with contextual Ability Draft recommendations",
   "main": "./out/main/index.js",
   "author": "Tiarin Hino",
   "license": "ISC",
@@ -18,9 +18,11 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:e2e": "playwright test",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "tsc -p tsconfig.node.json --noEmit && tsc -p tsconfig.web.json --noEmit",
     "build:dist": "npm run build && electron-builder --win",
-    "build:stream-assets": "node scripts/build-stream-fonts.mjs && node scripts/build-stream-ui-assets.mjs"
+    "build:stream-assets": "node scripts/build-stream-fonts.mjs && node scripts/build-stream-ui-assets.mjs",
+    "build:public": "node scripts/prepare-app-config.mjs --public && electron-vite build",
+    "build:beta": "npm run build:public && electron-builder --win --publish=never"
   },
   "dependencies": {
     "@sentry/electron": "^7.8.0",
@@ -80,5 +82,13 @@
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.55.0",
     "vitest": "^4.0.18"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/rubickguo/ability-draft-plus.git"
+  },
+  "homepage": "https://github.com/rubickguo/ability-draft-plus",
+  "bugs": {
+    "url": "https://github.com/rubickguo/ability-draft-plus/issues"
   }
 }

@@ -204,7 +204,7 @@ export function useOverlayData(): OverlayState & {
     return () => {
       cancelled = true
     }
-  }, [overlayData?.scanData, selectedSpotHeroOrder, selectedModelHeroOrder, rankingRevision])
+  }, [overlayData?.scanData, overlayData?.heroModels, selectedSpotHeroOrder, selectedModelHeroOrder, rankingRevision])
 
   const displayData = useMemo(
     () =>

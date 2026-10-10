@@ -18,6 +18,7 @@ import { createSpotDetectionService } from './services/spot-detection-service'
 import { createSlotMappingService } from './services/slot-mapping-service'
 import { createScanTriggerService } from './services/scan-trigger-service'
 import { createAutoRescanService } from './services/auto-rescan-service'
+import { getPublicBetaSmokeAppData } from './services/public-beta-smoke-path'
 import { createTopbarSeatService } from './services/topbar-seat-service'
 import { createGameFrameCapture } from './services/game-frame-capture'
 import { createTwitchPublisherService } from './services/twitch-publisher-service'
@@ -52,6 +53,15 @@ import type { SupportedLanguage } from '@shared/constants/defaults'
 //
 // Services use factory pattern (createXxxService) returning interfaces for testability.
 // The main process owns all services; renderers communicate only via typed IPC.
+
+// Keep the community Beta's database, caches and logs separate from upstream.
+// Set this before logging or any service accesses userData.
+const smokeAppData = getPublicBetaSmokeAppData(
+  app.commandLine.hasSwitch('adp-public-beta-smoke'),
+  process.env.ADP_PUBLIC_BETA_SMOKE_APP_DATA,
+)
+if (smokeAppData) app.setPath('appData', smokeAppData)
+app.setPath('userData', join(app.getPath('appData'), 'ability-draft-plus-cn-beta'))
 
 // Initialize logging early
 log.initialize()

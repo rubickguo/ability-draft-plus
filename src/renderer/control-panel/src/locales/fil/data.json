@@ -71,6 +71,16 @@
     "running": "Nag-a-update...",
     "lastUpdated": "Huling update:",
     "never": "Hindi pa kailanman",
+    "browser": {
+      "retry": "Retry data update after verification",
+      "verification": "Windrun requires a website verification. Complete it yourself in the opened Windrun window. Keep that window open, return here, and click Retry data update after verification. Existing statistics are kept until the required data is downloaded.",
+      "loading": "Wait for the Windrun verification page to load, complete any check yourself, then retry.",
+      "closed": "The verification window was closed. Click retry to reopen it, complete verification, then retry again.",
+      "timeout": "The Windrun browser request timed out. Check the verification window and retry.",
+      "failed": "The Windrun browser request failed. Check the opened page, complete verification if requested, then retry.",
+      "openFailed": "The Windrun verification window could not be opened. Click retry to try again.",
+      "unsupported": "This browser recovery only supports the official Windrun API."
+    },
     "liquipedia": {
       "title": "Liquipedia Enrichment",
       "description": "Kunin ang ability ordering data (Q/W/E/R) mula sa Liquipedia. Rate-limited sa 1 request bawat 31 segundo.",

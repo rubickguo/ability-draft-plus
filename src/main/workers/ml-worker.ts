@@ -389,7 +389,7 @@ async function captureModelTiles(
       const raw = await cropTile(screenshot, c, MODEL_TILE_COMPARE_SIZE)
       tiles.push({
         heroOrder: c.hero_order,
-        tile: raw.buffer.slice(raw.byteOffset, raw.byteOffset + raw.byteLength),
+        tile: Uint8Array.from(raw).buffer,
       })
     } catch {
       // Out-of-bounds crop (layout drift) — skip this tile
@@ -421,7 +421,7 @@ async function capturePlayerCardTiles(
       )
       tiles.push({
         row: c.hero_order,
-        tile: raw.buffer.slice(raw.byteOffset, raw.byteOffset + raw.byteLength),
+        tile: Uint8Array.from(raw).buffer,
       })
     } catch {
       // Out-of-bounds crop (layout drift) — skip this card
@@ -459,7 +459,7 @@ async function captureNameStrips(
       )
       strips.push({
         row: c.hero_order,
-        png: png.buffer.slice(png.byteOffset, png.byteOffset + png.byteLength),
+        png: Uint8Array.from(png).buffer,
       })
     } catch {
       // Out-of-bounds crop (layout drift) — skip this card
@@ -490,7 +490,7 @@ async function captureCountdownStrip(
   }
   try {
     const png = await cropRegionPng(screenshot, region, COUNTDOWN_STRIP_TARGET_WIDTH)
-    return png.buffer.slice(png.byteOffset, png.byteOffset + png.byteLength)
+    return Uint8Array.from(png).buffer
   } catch {
     return undefined
   }

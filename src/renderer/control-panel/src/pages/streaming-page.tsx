@@ -220,7 +220,7 @@ export function StreamingPage() {
         <CardContent className="space-y-4">
           {errorKey && (
             <p className="text-sm text-destructive" role="alert">
-              {t(errorKey)}
+              {t(errorKey, { defaultValue: errorKey })}
             </p>
           )}
 

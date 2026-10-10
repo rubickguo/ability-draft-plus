@@ -1,181 +1,102 @@
-# Dota 2 Ability Draft Plus
+# Ability Draft Plus CN Beta
 
-> [!IMPORTANT]
-> **Updating from 2.0.0, 2.0.1, or 2.0.2? Click "Check for Updates" manually.**
-> Those versions do not look for new releases on their own — a feature from the 1.x
-> series that was accidentally lost in the v2 rewrite and is restored in **2.1.0**.
-> Open the app, go to the **Dashboard**, and press **Check for Updates** to receive
-> 2.1.0; from then on, the app checks automatically again. This notice will also be
-> published on the [website](https://abilitydraftplus.com) after its upcoming rehaul.
+**给 Dota 2 OMG／技能征召一个清晰的本手首选。** 模型与技能统一排名，根据自己的模型、已有技能、选取席位和游戏内几号位重新计算，同时提醒值得截胡的敌方组合。
 
-AI-powered overlay for Dota 2's Ability Draft mode. Scans the draft board using machine learning, identifies all abilities in the pool, and displays real-time synergy recommendations directly on your game screen.
+[English](README.en.md) · [下载 Beta](https://github.com/rubickguo/ability-draft-plus/releases/tag/v3.2.1-beta.1) · [反馈问题](https://github.com/rubickguo/ability-draft-plus/issues) · [原项目](https://github.com/Tiarin-Hino/ability-draft-plus)
 
-![License](https://img.shields.io/badge/license-ISC-blue)
-![Platform](https://img.shields.io/badge/platform-Windows-blue)
-![Electron](https://img.shields.io/badge/Electron-40+-47848F)
+这是基于 **Tiarin Hino 的 Ability Draft Plus** 的社区分支。保留原项目的识别与悬浮层基础，重点改进中文体验、排名和选取决策。不是 Valve、Windrun 或原作者的官方版本。
 
-## Features
+## 看一遍它怎样工作
 
-### Core Functionality
-- **One-click ability scanning** -- machine learning identifies all 48 abilities in the draft pool from a single screenshot
-- **Real-time overlay** -- recommendations appear directly on top of the Dota 2 game screen
-- **Synergy detection** -- highlights overpowered (OP) ability combinations and trap combinations to avoid
-- **Triplet analysis** -- suggests the best third ability to complete known strong pairs
-- **Top-tier picks** -- up to 10 ranked recommendations, prioritizing synergies with your already-picked abilities
-- **Rescan** -- update recommendations after abilities are drafted
+![使用演示：选择模型、识别已有技能、移除被选项后，首选与排名一起更新](docs/media/recommendation-demo.gif)
 
-### Smart Overlay
-- **Click-through transparency** -- overlay sits on top of the game without blocking gameplay
-- **My Spot / My Model** -- select your hero position and model for personalized recommendations
-- **Ability tooltips** -- hover any ability for detailed stats, synergies, and win rates
-- **Hero model tooltips** -- hover hero models for hero-specific ability synergies
-- **OP & Trap panels** -- scrollable lists of the best and worst ability combinations in the current pool
+**上图使用构造数据和示意技能卡，运行的是实际推荐引擎与 React 界面组件。不是实战录像，演示中的胜率不代表当前版本强度。** 没有真实玩家昵称或个人对局记录。[静态图](docs/media/recommendation-demo.png) · [WebM 视频](docs/media/recommendation-demo.webm)
 
-### Data & ML
-- **Windrun.io integration** -- one-click data scraping from the premier Ability Draft statistics site
-- **524-class ML model** -- MobileNetV2 INT8 quantized, with optional DirectML GPU acceleration
-- **Automatic resolution detection** -- works out of the box for 28 common resolutions, with mathematical auto-scaling for others
-- **Calibration wizard** -- 4-anchor calibration for non-standard resolution setups
+## 这个分支改了什么
 
-### Quality of Life
-- **Dark mode** -- follows your system theme, or set manually to light/dark
-- **English, Russian & Simplified Chinese** -- full interface localization
-- **Auto-updater** -- in-app notifications when a new version is available
-- **Database backups** -- automatic backups on startup, manual backup/restore from Settings
-- **Windowed mode** -- automatic game window tracking for non-fullscreen setups
+- **直接给答案**：首选卡显示本手第一推荐、两个备选和中文理由，与图标上的序号使用同一个结果。
+- **模型、技能混排**：一套序号；前 3 名金色、4～10 名青色，呼吸光效提高辨识度。移除原版与数字排名冲突的独立推荐光效。
+- **局面变化就重排**：选择自己的席位、模型或职责后重新计算；再次识别后排除已被拿走的候选，并检查模型、大招和普通技能槽限制。
+- **能看懂的截胡提示**：敌人拿到组合的一半后仍然保留提醒，显示「已有」「尚缺／可截胡」及统计样本。潜在组合收在次级区域，面板可以隐藏，也可切换为历史胜率排序。
+- **中文技能和模型名称**：按 Dota 2 简体中文名称显示，保留内部标识以维持识别和数据关联。
 
-## Installation
+## 下载与使用
 
-### From Release (Recommended)
+当前目标版本为 **3.2.1-beta.1**，面向 Windows x64。下载安装文件请认准[这个分支的 Release 页面](https://github.com/rubickguo/ability-draft-plus/releases/tag/v3.2.1-beta.1)，不要混用原项目的安装包。
 
-1. Download the latest installer from [Releases](https://github.com/Tiarin-Hino/ability-draft-plus/releases)
-2. Run the installer -- choose your install directory
-3. Launch **Dota 2 Ability Draft Plus** from the Start Menu or Desktop shortcut
+> **已完成打包程序的空白配置启动验证；类型检查、1,125 项单元测试及 2 项端到端测试通过。** 未验证实际点击安装器完成安装。发布文件尚未代码签名，Windows 可能提示未知发布者。联网更新受网络与源站校验影响，不承诺所有环境都能成功。
 
-### From Source
+本分支使用独立的 `%APPDATA%\ability-draft-plus-cn-beta` 配置与数据目录，更新源指向本仓库。
 
-```bash
-git clone https://github.com/Tiarin-Hino/ability-draft-plus.git
+内置的是 **2026-10-10、补丁 7.41f 的 Windrun 公开统计快照**：513 个技能、127 个模型、5,434 条双技能组合、3,820 条模型＋技能组合。种子数据库不含个人对局、账号设置或私人接口凭据；不内置三技能组合及分路位移统计，这些需要联网更新成功后补齐。离线可以使用快照，但请注意补丁与数据日期。
+
+1. 启动应用，默认使用简体中文。检查数据页面的统计时间；可先使用内置快照，再开启悬浮层。
+2. 进入 OMG 选取界面，等待图标加载完整，按 `Ctrl+Shift+S` 进行首次识别。
+3. 选择 **我的席位**：指你在两侧玩家列表中的哪一行，用来区分自己的技能、队友和敌方；不等于游戏内几号位。
+4. 确认后选择 **我的模型**。有明确打法时，再用 **几号位** 按钮设置 1～5 号位职责偏好。
+5. 优先看首选卡和数字 `1`；有疑问时悬停查看原因。右侧「组合与截胡」补充敌方威胁。
+6. 有选项被拿走后按 `Ctrl+Shift+R` 重新识别。首选与剩余候选一起更新。
+
+快捷键仅在悬浮层开启时生效。识别有遗漏时，先重新识别或校准画面；推荐质量依赖输入是否正确。程序提供建议，选取仍由玩家在游戏里完成。
+
+## 联网更新数据
+
+1. 在「数据」页面点击「更新 Windrun 数据」。
+2. 如果源站要求网站／人机验证，应用会打开 Windrun 验证窗口。请你自己按网站提示完成验证。
+3. 保持验证窗口打开，回到应用点击 **「已完成验证，重试更新」**。如果窗口已经关闭，先重新打开并完成验证，再重试更新。
+4. 更新失败时可以继续使用原有统计；检查数据时间后再判断是否适合当前补丁。
+
+**这条人工验证恢复路径尚未在真实人机挑战环境中完成端到端验证。** 不能保证所有地区、网络或源站限制下都能更新。程序不会替你绕过或代做人机验证。
+
+公开包不包含原作者私有服务的凭据。依赖这些私有接口的功能可能不可用；不要将原版的全部联网功能视为本 Beta 的可用承诺。
+
+## 推荐如何计算
+
+底层表现与组合统计来自 [Windrun.io](https://windrun.io/)。本分支的推荐指数是**实验性的、可解释的规则评分**：
+
+1. 以高水平历史表现为基础；已知样本不足时向总体表现收缩，缺失数据时使用保守回退。
+2. 根据自己的模型与已选技能，加入经过样本量修正、限制幅度的组合影响；再考虑职责、控制缺口、攻击类型冲突、魔法和技能点压力。
+3. 席位与轮次可靠时加入选取顺序信息；确认连续两手时比较合法的两件搭配。
+4. 只有自身收益接近最优、且敌方威胁证据充分时，才让截胡改变第一推荐。样本或轮次不清楚时，只提示风险。
+
+**指数不是本局胜率，也不是被证明的全局最优解。** 组合历史胜率不能直接解释为你的胜率增益；平均选取顺序也不能推出准确的「下一轮还在」概率。当前权重和规则需要实战反馈与离线验证，没有承诺提高胜率。[评分实现](src/core/domain/contextual-ranking.ts)
+
+## Beta 边界与反馈
+
+- 数据时效取决于数据源和更新是否成功；内置快照不能自动代表最新补丁。
+- 不保证识别全部模型、先天、命石、天赋及特殊技能机制；识别错误会影响候选过滤和搭配判断。
+- 敌方行为没有被精确预测。只知道一部分选取信息时，界面会说明缺失信息并降低建议强度。
+- 演示验证的是界面与重排流程，不是对局胜率实验。
+
+欢迎在 [Issues](https://github.com/rubickguo/ability-draft-plus/issues) 中提供版本号、游戏分辨率／系统缩放、当时自己的模型和技能、识别结果与预期推荐。截图发布前请遮住昵称；不要上传个人数据库、访问令牌或完整私人日志。
+
+## 从源码运行
+
+本分支使用 Electron、React、TypeScript 和 ONNX Runtime。建议使用 Node.js 22，在 Windows 上运行：
+
+```sh
+git clone https://github.com/rubickguo/ability-draft-plus.git
 cd ability-draft-plus
-npm install
-npm run dev
+npm ci
+npm run typecheck
+npm test
+npm run build:beta
 ```
 
-## Usage
+这条命令链安装锁定依赖、检查类型、运行测试，然后通过 **公共构建路径** 打包，输出到 `dist/`。`build:beta` 会调用 `build:public`，清空可选的私有服务配置，不把本机 `.env` 中的凭据带入公开包。不要用普通 `build:dist` 替代公共发布步骤。
 
-### First Time Setup
+本地开发可运行 `npm run dev`。源码构建与打包不意味着外部数据接口一定可用。
 
-1. Launch the application
-2. Go to the **Data** page in the sidebar
-3. Click **Update Windrun Data** to fetch the latest ability and hero statistics from Windrun.io
-4. Wait for all three phases to complete (abilities, synergy pairs, triplets)
+[原版说明](docs/UPSTREAM_README.md)保留用于追溯，其中下载地址、界面和更新行为对应原项目。[架构说明](docs/ARCHITECTURE.md) · [演示生成脚本](scripts/create-public-demo.mjs)
 
-### During a Game
+## 致谢与许可
 
-1. Click **Activate Overlay** on the Dashboard before starting the game or after starting it but before queueing
-2. The overlay will appear on top of your game
-3. Queue for an **Ability Draft** match in Dota 2
-4. When the draft screen appears and is fully loaded, press **Ctrl+Shift+S** (or click **Initial Scan** on the overlay control panel, top-right corner)
-5. Review the highlighted abilities in the pool:
-   - **Green shimmer** -- general top-tier picks (highest combined winrate + pick priority score)
-   - **Blue/teal shimmer** -- synergy suggestions (abilities that pair well with your already-picked abilities, shown after selecting My Spot)
-   - **Gold shimmer** -- top-tier hero model (on the hero model slots)
-   - **Solid teal border** -- your own picked abilities (after selecting My Spot)
-   - **Solid green border** -- your selected hero model (after selecting My Model)
-6. Hover abilities for detailed tooltips with synergy information
-7. Use the **OP Combos** and **Trap Combos** panels for combination analysis
-8. After abilities are drafted, press **Ctrl+Shift+R** (or click **Rescan**) to update recommendations
-9. Click **Close** to dismiss the overlay, or **Reset** to clear the scan while keeping the overlay open
+- 原项目：[Tiarin-Hino/ability-draft-plus](https://github.com/Tiarin-Hino/ability-draft-plus)，作者 **Tiarin Hino**。原版权声明保留。
+- 原项目简体中文贡献：[hahahaha123567](https://github.com/hahahaha123567)。
+- 本分支维护：[rubickguo](https://github.com/rubickguo)。
+- 数据来源：[Windrun.io](https://windrun.io/)。统计由数据源提供，本分支的排名规则不代表 Windrun 官方推荐算法。
+- Dota 2 及相关名称属于 Valve；项目与 Valve 无官方关系。
 
-### Hotkeys
+自身技能归属过滤的独立修复已提交至原项目：[上游 PR #143](https://github.com/Tiarin-Hino/ability-draft-plus/pull/143)。
 
-| Shortcut | Action |
-|---|---|
-| `Ctrl+Shift+S` | Initial scan (skips the confirmation dialog) |
-| `Ctrl+Shift+R` | Rescan selected abilities |
-
-Hotkeys are active only while the overlay is open.
-
-### Selecting Your Hero
-
-- Click **My Spot** on a hero position to tell the app at which position you're playing -- this personalizes recommendations to show synergies with your already-picked abilities
-- Click **My Model** on a hero model to indicate which hero model is yours
-
-### Resolution Support
-
-The app automatically detects your game resolution and selects the correct coordinate layout. Pre-mapped coordinates are included for 28 common resolutions (1920x1080, 2560x1440, 3840x2160, ultrawide, and more). For resolutions without a preset, the app mathematically scales coordinates from the nearest base resolution for your aspect ratio family. No manual setup is needed in the vast majority of cases.
-
-## Tech Stack
-
-| Layer | Technology |
-|-------|-----------|
-| Framework | Electron 40 |
-| Frontend | React 19 + shadcn/ui + Tailwind CSS v4 |
-| State | Zustand + @zubridge/electron |
-| Build | electron-vite |
-| Database | Drizzle ORM + sql.js (WASM) |
-| ML | ONNX Runtime + DirectML (INT8 quantized MobileNetV2) |
-| Testing | Vitest (381 tests) + Playwright |
-| Logging | electron-log v5 |
-| i18n | i18next + react-i18next |
-
-## Development
-
-### Prerequisites
-
-- Node.js 20+
-- npm 10+
-
-### Scripts
-
-| Command | Description |
-|---------|-------------|
-| `npm run dev` | Start development server with hot reload |
-| `npm run build` | Build all targets (main, preload, renderer) |
-| `npm run build:dist` | Build and package as Windows installer |
-| `npm start` | Run the built application |
-| `npm test` | Run all unit/integration tests |
-| `npm run test:e2e` | Run Playwright E2E tests |
-| `npm run typecheck` | TypeScript type checking |
-| `npm run lint` | ESLint linting |
-| `npm run format` | Prettier formatting |
-
-### Project Structure
-
-```
-src/
-  core/          Pure TypeScript domain logic (zero Electron imports)
-    database/    Drizzle ORM schema and repositories
-    domain/      Business logic (scoring, synergies, scan processing)
-    ml/          ONNX Runtime classifier and image preprocessing
-    resolution/  Coordinate mapping and mathematical scaling
-    scraper/     Windrun.io API client and data transformer
-  main/          Electron main process
-    ipc/         IPC handler registration
-    services/    Window management, ML, screenshots, scraping, etc.
-    store/       Zustand app store + draft store
-    workers/     ML worker thread
-  preload/       Context-isolated preload scripts
-  renderer/
-    control-panel/   Main application window (React SPA)
-    overlay/         Game overlay window (transparent, click-through)
-    stream/          Streamer view board (served over local HTTP for OBS)
-  shared/        Types and constants shared between processes
-```
-
-See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for detailed technical documentation
-and [docs/STREAMER_VIEW.md](docs/STREAMER_VIEW.md) for the OBS/streaming setup guide.
-
-## License
-
-[ISC](LICENSE)
-
-## Author
-
-Tiarin Hino
-
-## Contributors
-
-Thanks to the community members who make the app better:
-
-- [hahahaha123567](https://github.com/hahahaha123567) — Simplified Chinese (简体中文) localization
+软件遵循 [ISC License](LICENSE)。数据、游戏名称和相关素材的权利属于各自权利人。

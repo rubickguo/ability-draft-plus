@@ -33,6 +33,40 @@ describe('WindrunApiClient', () => {
     })
   }
 
+  it('supports a user-verified fetch transport while preserving API parameters', async () => {
+    const browserFetch = vi
+      .fn()
+      .mockResolvedValue(
+        new Response('{"data":[]}', { headers: { 'content-type': 'application/json' } }),
+      )
+    const client = createWindrunApiClient(undefined, undefined, browserFetch)
+    await expect(client.fetchAbilities('7.40c')).resolves.toEqual({ data: [] })
+    expect(browserFetch.mock.calls[0][0]).toBe(
+      'https://api.windrun.io/api/v2/abilities?patch=7.40c',
+    )
+    expect(globalThis.fetch).not.toHaveBeenCalled()
+  })
+  it('exposes an HTTP status for a recoverable challenge without URL or tag leakage', async () => {
+    mockFetchError(403, 'Forbidden')
+    const error = await createWindrunApiClient(undefined, 'PRIVATE_TEST')
+      .fetchAbilities()
+      .catch((e) => e)
+    expect(error.status).toBe(403)
+    expect(error.message).not.toContain('PRIVATE_TEST')
+  })
+  it('recognizes a native HTTP 200 HTML verification page before JSON parsing', async () => {
+    vi.mocked(globalThis.fetch).mockResolvedValueOnce(
+      new Response('<html>Verify</html>', {
+        status: 200,
+        headers: { 'content-type': 'text/html' },
+      }),
+    )
+    await expect(createWindrunApiClient().fetchStaticHeroes()).rejects.toMatchObject({
+      code: 'verification',
+      message: 'windrunBrowser:verification',
+    })
+  })
+
   describe('client tag', () => {
     // Dummy value — the real one lives only in .env / app-config.json
     const TOKEN = 'test-token-123'
@@ -79,8 +113,12 @@ describe('WindrunApiClient', () => {
     const response: WindrunStaticAbilitiesResponse = {
       data: [
         {
-          valveId: 5359, englishName: 'Fury Swipes', shortName: 'ursa_fury_swipes',
-          ownerHeroId: 70, hasScepter: false, hasShard: true,
+          valveId: 5359,
+          englishName: 'Fury Swipes',
+          shortName: 'ursa_fury_swipes',
+          ownerHeroId: 70,
+          hasScepter: false,
+          hasShard: true,
         },
       ],
     }
@@ -133,11 +171,17 @@ describe('WindrunApiClient', () => {
   it('fetchAbilityPairs returns both pairs and abilityStats', async () => {
     const response: WindrunPairsResponse = {
       data: {
-        abilityPairs: [
-          { abilityIdOne: 5359, abilityIdTwo: 5100, numPicks: 500, winrate: 0.60 },
-        ],
+        abilityPairs: [{ abilityIdOne: 5359, abilityIdTwo: 5100, numPicks: 500, winrate: 0.6 }],
         abilityStats: [
-          { abilityId: 5359, numPicks: 800, avgPickPosition: 2.6, wins: 440, ownerHero: 70, winrate: 0.55, pickRate: 0.99 },
+          {
+            abilityId: 5359,
+            numPicks: 800,
+            avgPickPosition: 2.6,
+            wins: 440,
+            ownerHero: 70,
+            winrate: 0.55,
+            pickRate: 0.99,
+          },
         ],
       },
     }
@@ -154,7 +198,13 @@ describe('WindrunApiClient', () => {
     const response: WindrunTripletsResponse = {
       data: {
         abilityTriplets: [
-          { abilityIdOne: -70, abilityIdTwo: 5359, abilityIdThree: 5100, numPicks: 200, winrate: 0.65 },
+          {
+            abilityIdOne: -70,
+            abilityIdTwo: 5359,
+            abilityIdThree: 5100,
+            numPicks: 200,
+            winrate: 0.65,
+          },
         ],
       },
     }
@@ -173,8 +223,14 @@ describe('WindrunApiClient', () => {
         patches: { overall: ['7.41d'] },
         abilityShifts: [
           {
-            abilityId: 5606, killsShift: 0.05, deathsShift: -0.1, killAssistShift: 0.02,
-            gpmShift: 0.56, xpmShift: 0.4, dmgShift: 0.08, healingShift: -0.05,
+            abilityId: 5606,
+            killsShift: 0.05,
+            deathsShift: -0.1,
+            killAssistShift: 0.02,
+            gpmShift: 0.56,
+            xpmShift: 0.4,
+            dmgShift: 0.08,
+            healingShift: -0.05,
           },
         ],
       },

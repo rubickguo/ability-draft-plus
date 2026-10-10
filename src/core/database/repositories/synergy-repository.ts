@@ -136,7 +136,9 @@ export interface SynergyRepository {
   ): number
 }
 
-export function createSynergyRepository(db: SQLJsDatabase): SynergyRepository {
+export function createSynergyRepository<TSchema extends Record<string, unknown>>(
+  db: SQLJsDatabase<TSchema>,
+): SynergyRepository {
   // Drizzle aliases for self-joining Abilities table
   const a1 = alias(abilities, 'a1')
   const a2 = alias(abilities, 'a2')

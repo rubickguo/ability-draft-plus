@@ -96,7 +96,7 @@ export function StepAutoDetect({
   }[source]
 
   if (loading) {
-    return <div className="text-sm text-muted-foreground">{t('mapper.autoDetect.detecting')}</div>
+    return <div className="text-sm text-muted-foreground">{t('status.initializing', { ns: 'common' })}</div>
   }
 
   return (

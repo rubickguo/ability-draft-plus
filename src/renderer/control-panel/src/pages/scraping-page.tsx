@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button'
 import { MlPipelineCard } from '@/components/data/ml-pipeline-card'
 import { useAppStore } from '@/hooks/use-app-store'
+import { windrunBrowserMessageKey } from '@shared/windrun-browser-error'
 
 export function ScrapingPage() {
   const { t } = useTranslation('data')
@@ -27,6 +28,7 @@ export function ScrapingPage() {
   const isWindrunError = scraperStatus === 'error'
   const isLiquipediaRunning = liquipediaStatus === 'running'
   const isLiquipediaError = liquipediaStatus === 'error'
+  const browserMessageKey = windrunBrowserMessageKey(scraperMessage)
 
   return (
     <div className="space-y-6">
@@ -37,9 +39,7 @@ export function ScrapingPage() {
             <Download className="h-5 w-5" />
             {t('scraping.title')}
           </CardTitle>
-          <CardDescription>
-            {t('scraping.description')}
-          </CardDescription>
+          <CardDescription>{t('scraping.description')}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <Button
@@ -52,11 +52,17 @@ export function ScrapingPage() {
             ) : (
               <Download className="h-4 w-4 mr-1" />
             )}
-            {isWindrunRunning ? t('scraping.running') : t('scraping.updateButton')}
+            {isWindrunRunning
+              ? t('scraping.running')
+              : browserMessageKey
+                ? t('scraping.browser.retry')
+                : t('scraping.updateButton')}
           </Button>
 
           {scraperMessage && (
-            <div className={`flex items-start gap-2 text-sm ${isWindrunError ? 'text-destructive' : 'text-muted-foreground'}`}>
+            <div
+              className={`flex items-start gap-2 text-sm ${isWindrunError ? 'text-destructive' : 'text-muted-foreground'}`}
+            >
               {isWindrunError ? (
                 <AlertCircle className="h-4 w-4 mt-0.5 shrink-0" />
               ) : isWindrunRunning ? (
@@ -64,7 +70,7 @@ export function ScrapingPage() {
               ) : (
                 <CheckCircle2 className="h-4 w-4 mt-0.5 shrink-0" />
               )}
-              <p>{scraperMessage}</p>
+              <p>{browserMessageKey ? t(browserMessageKey) : scraperMessage}</p>
             </div>
           )}
 
@@ -85,9 +91,7 @@ export function ScrapingPage() {
               <BookOpen className="h-5 w-5" />
               {t('scraping.liquipedia.title')}
             </CardTitle>
-            <CardDescription>
-              {t('scraping.liquipedia.description')}
-            </CardDescription>
+            <CardDescription>{t('scraping.liquipedia.description')}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex items-start gap-2 text-sm text-yellow-600 dark:text-yellow-400">
@@ -106,11 +110,15 @@ export function ScrapingPage() {
               ) : (
                 <BookOpen className="h-4 w-4 mr-1" />
               )}
-              {isLiquipediaRunning ? t('scraping.liquipedia.running') : t('scraping.liquipedia.updateButton')}
+              {isLiquipediaRunning
+                ? t('scraping.liquipedia.running')
+                : t('scraping.liquipedia.updateButton')}
             </Button>
 
             {liquipediaMessage && (
-              <div className={`flex items-start gap-2 text-sm ${isLiquipediaError ? 'text-destructive' : 'text-muted-foreground'}`}>
+              <div
+                className={`flex items-start gap-2 text-sm ${isLiquipediaError ? 'text-destructive' : 'text-muted-foreground'}`}
+              >
                 {isLiquipediaError ? (
                   <AlertCircle className="h-4 w-4 mt-0.5 shrink-0" />
                 ) : isLiquipediaRunning ? (

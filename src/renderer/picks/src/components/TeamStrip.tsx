@@ -13,7 +13,7 @@ import { portraitObjectPosition } from '../portrait-focus'
 // load fall back to the empty-socket look instead of a broken-image glyph.
 
 function AbilityTile({ pick, ult }: { pick: PicksAbility | null; ult: boolean }) {
-  const { t } = useTranslation()
+  const { t } = useTranslation('picks')
   const [failed, setFailed] = useState(false)
   const ultClass = ult ? ' tile-ult' : ''
 

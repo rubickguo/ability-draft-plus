@@ -1,4 +1,5 @@
 import type enStream from '../../../stream/src/locales/en.json'
+import type enPicks from '../../../picks/src/locales/en.json'
 import type enOverlay from '../../../overlay/src/locales/en/overlay.json'
 import type enCommon from '../locales/en/common.json'
 import type enSettings from '../locales/en/settings.json'
@@ -13,6 +14,7 @@ declare module 'i18next' {
     defaultNS: 'common'
     resources: {
       translation: typeof enStream
+      picks: typeof enPicks
       overlay: typeof enOverlay
       common: typeof enCommon
       settings: typeof enSettings

@@ -80,4 +80,10 @@ describe('one recommendation projected to all icon guidance', () => {
     expect(result.abilities.get('a')?.groups).toEqual([])
     expect(result.groups).toHaveLength(1)
   })
+  it('adds one combo marker when an owned skill remains in the cached pool', () => {
+    const duplicate = structuredClone(data)
+    duplicate.scanData!.standard.push(duplicate.scanData!.selectedAbilities[0])
+    const result = buildDraftBadges(duplicate, recommendation)
+    expect(result.abilities.get('owned')?.groups.map(group => group.key)).toEqual(['pair'])
+  })
 })

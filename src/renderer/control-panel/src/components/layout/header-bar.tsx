@@ -14,7 +14,7 @@ import { LANGUAGE_META, SUPPORT_URL, SUPPORTED_LANGUAGES } from '@shared/constan
 import type { SupportedLanguage } from '@shared/constants/defaults'
 import type { PageId } from '@/hooks/use-navigation'
 
-const pageTitleKeys: Record<PageId, { ns: string; key: string }> = {
+const pageTitleKeys = {
   dashboard: { ns: 'dashboard', key: 'title' },
   abilities: { ns: 'data', key: 'abilities.title' },
   heroes: { ns: 'data', key: 'heroes.title' },
@@ -23,7 +23,7 @@ const pageTitleKeys: Record<PageId, { ns: string; key: string }> = {
   settings: { ns: 'settings', key: 'title' },
   mapper: { ns: 'data', key: 'mapper.title' },
   'dev-mapper': { ns: 'data', key: 'mapper.devTitle' },
-}
+} as const satisfies Record<PageId, { ns: string; key: string }>
 
 interface HeaderBarProps {
   activePage: PageId

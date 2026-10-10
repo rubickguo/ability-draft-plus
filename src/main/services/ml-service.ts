@@ -251,10 +251,7 @@ export function createMlService(): MlService {
       }
 
       // Create a copy of the ArrayBuffer for transfer
-      const bufferCopy = screenshot.data.buffer.slice(
-        screenshot.data.byteOffset,
-        screenshot.data.byteOffset + screenshot.data.byteLength,
-      )
+      const bufferCopy = Uint8Array.from(screenshot.data).buffer
 
       const message: MlWorkerRequest = {
         type: 'scan',

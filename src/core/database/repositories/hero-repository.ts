@@ -42,7 +42,9 @@ export interface HeroRepository {
   getAllShifts(): AbilityShiftRow[]
 }
 
-export function createHeroRepository(db: SQLJsDatabase): HeroRepository {
+export function createHeroRepository<TSchema extends Record<string, unknown>>(
+  db: SQLJsDatabase<TSchema>,
+): HeroRepository {
   return {
     getAll() {
       return db

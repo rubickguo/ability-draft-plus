@@ -68,8 +68,9 @@ export function buildDraftBadges(
     }
     result.groups.push(group)
     for (const slot of slots) {
-      if (slot.name && threat.names.includes(slot.displayName))
-        result.abilities.get(slot.name)?.groups.push(group)
+      const guidance = slot.name ? result.abilities.get(slot.name) : undefined
+      if (guidance && threat.names.includes(slot.displayName) && !guidance.groups.some(item => item.key === group.key))
+        guidance.groups.push(group)
     }
     for (const model of data.heroModels) {
       if (threat.names.includes(model.heroDisplayName))

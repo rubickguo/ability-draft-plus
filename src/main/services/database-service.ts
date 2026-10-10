@@ -51,7 +51,7 @@ const logger = log.scope('database')
 
 export interface DatabaseService {
   initialize(): Promise<void>
-  getDb(): SQLJsDatabase
+  getDb(): SQLJsDatabase<typeof schema>
   heroes: HeroRepository
   abilities: AbilityRepository
   synergies: SynergyRepository
@@ -70,7 +70,7 @@ export function createDatabaseService(): DatabaseService {
 
   let SQL: SqlJsStatic
   let sqliteDb: SqlJsDatabase
-  let drizzleDb: SQLJsDatabase
+  let drizzleDb: SQLJsDatabase<typeof schema>
   let firstRun = false
 
   let heroRepo: HeroRepository
@@ -229,7 +229,7 @@ export function createDatabaseService(): DatabaseService {
 // Exported for unit testing.
 export function runColumnMigrations(db: SqlJsDatabase): void {
   const tables = Object.values(schema).filter(
-    (value): value is SQLiteTable => value instanceof SQLiteTable,
+    (value) => value instanceof SQLiteTable,
   )
 
   for (const table of tables) {

@@ -11,7 +11,7 @@ vi.mock('react-i18next', async (importOriginal) => ({
 afterEach(cleanup)
 
 function setup() {
-  const events = new Map<string, (value: any) => void>()
+  const events = new Map<string, (value: unknown) => void>()
   const data = {
     selectedSpotHeroOrder: null,
     selectedModelHeroOrder: null,
@@ -37,7 +37,7 @@ function setup() {
     value: {
       invoke,
       send: vi.fn(),
-      on: (name: string, fn: (value: any) => void) => {
+      on: (name: string, fn: (value: unknown) => void) => {
         events.set(name, fn)
         return () => events.delete(name)
       },

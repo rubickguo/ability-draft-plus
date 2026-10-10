@@ -2,12 +2,17 @@ import { app } from 'electron'
 import { join } from 'path'
 import { readFileSync } from 'fs'
 import log from 'electron-log/main'
-import { performFullScrape, performLiquipediaEnrichment, createWindrunApiClient } from '@core/scraper'
+import {
+  performFullScrape,
+  performLiquipediaEnrichment,
+  createWindrunApiClient,
+} from '@core/scraper'
 import type { ScraperDeps, LiquipediaDeps } from '@core/scraper'
 import type { MlModelGaps } from '@core/ml/staleness-detector'
 import type { DatabaseService } from './database-service'
 import type { AppStore } from '../store/app-store'
 import { loadClientTag } from './api-config'
+import { createWindrunBrowser } from './windrun-browser'
 
 // @DEV-GUIDE: Orchestrates data scraping from Windrun.io (ability/hero stats, synergy pairs,
 // triplets) and Liquipedia (ability_order, is_ultimate enrichment).
@@ -36,9 +41,7 @@ export interface ScraperService {
 // the UI shows a warning (mlModelGaps). The gaps are persisted in the metadata table.
 function loadClassNames(): string[] {
   try {
-    const basePath = app.isPackaged
-      ? process.resourcesPath
-      : join(app.getAppPath(), 'resources')
+    const basePath = app.isPackaged ? process.resourcesPath : join(app.getAppPath(), 'resources')
     const classNamesPath = join(basePath, 'model', 'class_names.json')
     const raw = readFileSync(classNamesPath, 'utf-8')
     const parsed = JSON.parse(raw) as Record<string, string> | string[]
@@ -60,6 +63,16 @@ export function createScraperService(
 ): ScraperService {
   let isWindrunRunning = false
   let isLiquipediaRunning = false
+  let browserRecoveryRequested = false
+  const browser = createWindrunBrowser()
+  const showVerification = (): void => {
+    try {
+      browser.open(loadClientTag())
+      appStore.setState({ scraperStatus: 'error', scraperMessage: 'windrunBrowser:verification' })
+    } catch {
+      appStore.setState({ scraperStatus: 'error', scraperMessage: 'windrunBrowser:openFailed' })
+    }
+  }
 
   return {
     restorePersistedState() {
@@ -87,13 +100,25 @@ export function createScraperService(
         return
       }
 
+      // Only reached from the existing user-triggered update IPC. Opening this
+      // service / the app never opens a remote page or solves a challenge.
+      if (browserRecoveryRequested && !browser.isOpen()) {
+        showVerification()
+        return
+      }
+      const useBrowser = browserRecoveryRequested && browser.isOpen()
+
       isWindrunRunning = true
       appStore.setState({
         scraperStatus: 'running',
         scraperMessage: 'Starting scrape...',
       })
 
-      const apiClient = createWindrunApiClient(undefined, loadClientTag())
+      const apiClient = createWindrunApiClient(
+        undefined,
+        loadClientTag(),
+        useBrowser ? browser.fetchRequest : undefined,
+      )
       const classNames = loadClassNames()
 
       const deps: ScraperDeps = {
@@ -113,6 +138,8 @@ export function createScraperService(
       })
         .then((result) => {
           if (result.success) {
+            if (useBrowser) browser.close()
+            browserRecoveryRequested = false
             const lastUpdated = dbService.metadata.getLastScrapeDate()
             appStore.setState({
               scraperStatus: 'idle',
@@ -138,6 +165,11 @@ export function createScraperService(
               }
             }
           } else {
+            if (result.browserRequired) {
+              browserRecoveryRequested = true
+              showVerification()
+              return
+            }
             appStore.setState({
               scraperStatus: 'error',
               scraperMessage: result.error ?? 'Unknown error',

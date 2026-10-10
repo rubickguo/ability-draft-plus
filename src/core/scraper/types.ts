@@ -262,6 +262,8 @@ export interface ScraperResult {
   success: boolean
   error?: string
   modelGaps?: MlModelGaps | null
+  /** Public-site challenge requires explicit user verification before retrying. */
+  browserRequired?: boolean
 }
 
 export interface ScraperOptions {

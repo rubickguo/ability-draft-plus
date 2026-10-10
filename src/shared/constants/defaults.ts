@@ -9,7 +9,7 @@ import type { AppSettings } from '../types'
 export const DEFAULT_SETTINGS: AppSettings = {
   opThreshold: DEFAULT_OP_THRESHOLD,
   trapThreshold: DEFAULT_TRAP_THRESHOLD,
-  language: 'en',
+  language: 'zh-CN',
   themeMode: 'system',
   overlayOpacity: 1,
   overlayAnchor: 'right',
@@ -51,8 +51,8 @@ export const LANGUAGE_META: Record<SupportedLanguage, { short: string; autonym: 
   fi: { short: 'FI', autonym: 'Suomi' },
 }
 
-export const APP_ID = 'com.tiarinhino.dota2abilitydraftplus'
-export const APP_NAME = 'Dota 2 Ability Draft Plus'
+export const APP_ID = 'com.rubickguo.abilitydraftplus.cn'
+export const APP_NAME = 'Ability Draft Plus CN Beta'
 
 /** Public base URL of the Twitch extension backend (EBS). Not a secret — overridable
  * via TWITCH_EBS_URL (.env in dev, app-config.json when packaged) for local EBS runs. */

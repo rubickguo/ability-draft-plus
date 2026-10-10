@@ -56,7 +56,9 @@ export interface TripletRepository {
   ): Map<string, ThirdAbilityInfo[]>
 }
 
-export function createTripletRepository(db: SQLJsDatabase): TripletRepository {
+export function createTripletRepository<TSchema extends Record<string, unknown>>(
+  db: SQLJsDatabase<TSchema>,
+): TripletRepository {
   return {
     clearAndInsertAbilityTriplets(
       triplets: TripletInsertData[],

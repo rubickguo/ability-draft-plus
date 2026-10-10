@@ -51,6 +51,8 @@ test-results/
 
 # Electron
 *.asar
+*.db-wal
+*.db-shm
 
 # Generated config
 **/app-config.js

@@ -3,21 +3,29 @@ import { performFullScrape, performLiquipediaEnrichment } from '@core/scraper/or
 import type { ScraperDeps, LiquipediaDeps } from '@core/scraper/orchestrator'
 import type { ScraperProgress } from '@core/scraper/types'
 import type { WindrunApiClient } from '@core/scraper/windrun-api-client'
+import { WindrunApiError } from '@core/scraper/windrun-api-client'
+import { WindrunBrowserError } from '@shared/windrun-browser-error'
 
 function createMockApiClient(): WindrunApiClient {
   return {
     fetchStaticAbilities: vi.fn().mockResolvedValue({
       data: [
         {
-          valveId: 5359, englishName: 'Fury Swipes', shortName: 'ursa_fury_swipes',
-          ownerHeroId: 70, hasScepter: false, hasShard: true,
+          valveId: 5359,
+          englishName: 'Fury Swipes',
+          shortName: 'ursa_fury_swipes',
+          ownerHeroId: 70,
+          hasScepter: false,
+          hasShard: true,
         },
       ],
     }),
     fetchStaticHeroes: vi.fn().mockResolvedValue({
       data: {
         '70': {
-          id: 70, englishName: 'Ursa', shortName: 'ursa',
+          id: 70,
+          englishName: 'Ursa',
+          shortName: 'ursa',
         },
       },
     }),
@@ -27,12 +35,22 @@ function createMockApiClient(): WindrunApiClient {
         patches: { overall: ['7.40c'] },
         abilityStats: [
           {
-            abilityId: 5359, numPicks: 800, avgPickPosition: 2.6,
-            wins: 440, ownerHero: 70, winrate: 0.55, pickRate: 0.99,
+            abilityId: 5359,
+            numPicks: 800,
+            avgPickPosition: 2.6,
+            wins: 440,
+            ownerHero: 70,
+            winrate: 0.55,
+            pickRate: 0.99,
           },
           {
-            abilityId: -70, numPicks: 1000, avgPickPosition: 4.5,
-            wins: 520, ownerHero: 70, winrate: 0.52, pickRate: 0.95,
+            abilityId: -70,
+            numPicks: 1000,
+            avgPickPosition: 4.5,
+            wins: 520,
+            ownerHero: 70,
+            winrate: 0.52,
+            pickRate: 0.95,
           },
         ],
       },
@@ -47,14 +65,21 @@ function createMockApiClient(): WindrunApiClient {
           patches: { overall: ['7.40c'] },
           abilityStats: [
             {
-              abilityId: 5359, numPicks: 150, avgPickPosition: 2.2,
-              wins: 90, ownerHero: 70, winrate: 0.60, pickRate: 0.98,
+              abilityId: 5359,
+              numPicks: 150,
+              avgPickPosition: 2.2,
+              wins: 90,
+              ownerHero: 70,
+              winrate: 0.6,
+              pickRate: 0.98,
             },
           ],
         },
       },
     }),
-    fetchHeroes: vi.fn().mockResolvedValue({ data: { patches: { overall: ['7.40c'] }, heroStats: {} } }),
+    fetchHeroes: vi
+      .fn()
+      .mockResolvedValue({ data: { patches: { overall: ['7.40c'] }, heroStats: {} } }),
     fetchAbilityPairs: vi.fn().mockResolvedValue({
       data: {
         abilityPairs: [],
@@ -71,12 +96,24 @@ function createMockApiClient(): WindrunApiClient {
         patches: { overall: ['7.40c'] },
         abilityShifts: [
           {
-            abilityId: 5359, killsShift: 0.1, deathsShift: -0.05, killAssistShift: 0.2,
-            gpmShift: 0.45, xpmShift: 0.31, dmgShift: 0.43, healingShift: -0.02,
+            abilityId: 5359,
+            killsShift: 0.1,
+            deathsShift: -0.05,
+            killAssistShift: 0.2,
+            gpmShift: 0.45,
+            xpmShift: 0.31,
+            dmgShift: 0.43,
+            healingShift: -0.02,
           },
           {
-            abilityId: -70, killsShift: 0.01, deathsShift: 0, killAssistShift: 0.01,
-            gpmShift: 0.02, xpmShift: 0.01, dmgShift: 0.03, healingShift: 0.05,
+            abilityId: -70,
+            killsShift: 0.01,
+            deathsShift: 0,
+            killAssistShift: 0.01,
+            gpmShift: 0.02,
+            xpmShift: 0.01,
+            dmgShift: 0.03,
+            healingShift: 0.05,
           },
         ],
       },
@@ -139,6 +176,83 @@ describe('performFullScrape', () => {
   function onProgress(p: ScraperProgress) {
     progress.push(p)
   }
+  it('offers browser recovery for native HTTP 200 challenge responses', async () => {
+    vi.mocked(deps.apiClient.fetchStaticHeroes).mockRejectedValue(
+      new WindrunBrowserError('verification'),
+    )
+    const result = await performFullScrape(deps, onProgress)
+    expect(result.browserRequired).toBe(true)
+    expect(deps.heroes.upsertHeroes).not.toHaveBeenCalled()
+  })
+  it.each(['pairs-data', 'triplets-data', 'pairs-list', 'triplets-list'])(
+    'rejects malformed %s payloads before changing the old snapshot',
+    async (kind) => {
+      if (kind === 'pairs-data')
+        vi.mocked(deps.apiClient.fetchAbilityPairs).mockResolvedValue({ data: null } as never)
+      if (kind === 'triplets-data')
+        vi.mocked(deps.apiClient.fetchAbilityTriplets).mockResolvedValue({} as never)
+      if (kind === 'pairs-list')
+        vi.mocked(deps.apiClient.fetchAbilityPairs).mockResolvedValue({
+          data: { abilityPairs: {} },
+        } as never)
+      if (kind === 'triplets-list')
+        vi.mocked(deps.apiClient.fetchAbilityTriplets).mockResolvedValue({
+          data: { abilityTriplets: 'invalid' },
+        } as never)
+      const result = await performFullScrape(deps, onProgress)
+      expect(result.success).toBe(false)
+      expect(deps.heroes.upsertHeroes).not.toHaveBeenCalled()
+      expect(deps.metadata.set).not.toHaveBeenCalled()
+      expect(deps.persist).not.toHaveBeenCalled()
+    },
+  )
+  it('validates patch metadata before changing statistics', async () => {
+    const response = await deps.apiClient.fetchAbilities()
+    vi.mocked(deps.apiClient.fetchAbilities).mockResolvedValue({
+      data: { ...response.data, patches: null },
+    } as never)
+    const result = await performFullScrape(deps, onProgress)
+    expect(result.success).toBe(false)
+    expect(deps.heroes.upsertHeroes).not.toHaveBeenCalled()
+    expect(deps.persist).not.toHaveBeenCalled()
+  })
+  it('rejects invalid pair entries before changing statistics', async () => {
+    vi.mocked(deps.apiClient.fetchAbilityPairs).mockResolvedValue({
+      data: { abilityPairs: [null] },
+    } as never)
+    const result = await performFullScrape(deps, onProgress)
+    expect(result.success).toBe(false)
+    expect(deps.heroes.upsertHeroes).not.toHaveBeenCalled()
+    expect(deps.persist).not.toHaveBeenCalled()
+  })
+  it('still accepts omitted optional pair and triplet arrays', async () => {
+    vi.mocked(deps.apiClient.fetchAbilityPairs).mockResolvedValue({ data: {} })
+    vi.mocked(deps.apiClient.fetchAbilityTriplets).mockResolvedValue({ data: {} })
+    const result = await performFullScrape(deps, onProgress)
+    expect(result.success).toBe(true)
+    expect(deps.synergies.clearAndInsertAbilitySynergies).toHaveBeenCalledWith([], expect.any(Map))
+  })
+
+  it('surfaces 403 verification recovery without mutating existing statistics', async () => {
+    vi.mocked(deps.apiClient.fetchStaticHeroes).mockRejectedValue(
+      new WindrunApiError(403, 'Forbidden', 'static/heroes'),
+    )
+    const result = await performFullScrape(deps, onProgress)
+    expect(result.browserRequired).toBe(true)
+    expect(deps.heroes.upsertHeroes).not.toHaveBeenCalled()
+    expect(deps.persist).not.toHaveBeenCalled()
+  })
+  it('fetches all required responses before changing data, so a late challenge preserves the old snapshot', async () => {
+    vi.mocked(deps.apiClient.fetchAbilityPairs).mockRejectedValue(
+      new WindrunApiError(403, 'Forbidden', 'ability-pairs'),
+    )
+    const result = await performFullScrape(deps, onProgress)
+    expect(result.browserRequired).toBe(true)
+    expect(deps.heroes.upsertHeroes).not.toHaveBeenCalled()
+    expect(deps.abilities.deleteAbilitiesNotIn).not.toHaveBeenCalled()
+    expect(deps.metadata.set).not.toHaveBeenCalled()
+    expect(deps.persist).not.toHaveBeenCalled()
+  })
 
   it('completes all three phases successfully', async () => {
     const result = await performFullScrape(deps, onProgress)
@@ -149,23 +263,32 @@ describe('performFullScrape', () => {
 
   it('retains sample evidence from the same successful scrape, including high-skill counts', async () => {
     await performFullScrape(deps, onProgress)
-    const writes = (deps.metadata.set as ReturnType<typeof vi.fn>).mock.calls
-      .filter(([key]) => key === 'draft_ranking_evidence_v1')
+    const writes = (deps.metadata.set as ReturnType<typeof vi.fn>).mock.calls.filter(
+      ([key]) => key === 'draft_ranking_evidence_v1',
+    )
     expect(writes.length).toBeGreaterThan(0)
     const evidence = JSON.parse(writes.at(-1)![1])
-    expect(evidence.samples['ability:ursa_fury_swipes']).toMatchObject({ numPicks: 800, highSkillNumPicks: 150 })
+    expect(evidence.samples['ability:ursa_fury_swipes']).toMatchObject({
+      numPicks: 800,
+      highSkillNumPicks: 150,
+    })
     expect(evidence.samples['hero:ursa']).toMatchObject({ numPicks: 1000, highSkillNumPicks: null })
-    expect(evidence.sourceDate).toBe((deps.metadata.setLastScrapeDate as ReturnType<typeof vi.fn>).mock.calls[0][0])
+    expect(evidence.sourceDate).toBe(
+      (deps.metadata.setLastScrapeDate as ReturnType<typeof vi.fn>).mock.calls[0][0],
+    )
     expect(evidence.patches).toEqual(['7.40c'])
   })
 
   it('invalidates old sample evidence before a partial database update can fail', async () => {
-    vi.mocked(deps.apiClient.fetchAbilityPairs).mockRejectedValue(new Error('pairs unavailable'))
+    vi.mocked(deps.abilities.upsertAbilities).mockImplementation(() => {
+      throw new Error('write failed')
+    })
     const result = await performFullScrape(deps, onProgress)
     expect(result.success).toBe(false)
     expect(deps.metadata.set).toHaveBeenCalledWith('draft_ranking_evidence_v1', '')
-    const writes = (deps.metadata.set as ReturnType<typeof vi.fn>).mock.calls
-      .filter(([key]) => key === 'draft_ranking_evidence_v1')
+    const writes = (deps.metadata.set as ReturnType<typeof vi.fn>).mock.calls.filter(
+      ([key]) => key === 'draft_ranking_evidence_v1',
+    )
     expect(writes.at(-1)?.[1]).toBe('')
   })
 
@@ -255,7 +378,8 @@ describe('performFullScrape', () => {
     await performFullScrape(deps, onProgress)
 
     expect(deps.metadata.setLastScrapeDate).toHaveBeenCalledOnce()
-    const dateArg = (deps.metadata.setLastScrapeDate as ReturnType<typeof vi.fn>).mock.calls[0][0] as string
+    const dateArg = (deps.metadata.setLastScrapeDate as ReturnType<typeof vi.fn>).mock
+      .calls[0][0] as string
     expect(dateArg).toMatch(/^\d{4}-\d{2}-\d{2}T/)
   })
 

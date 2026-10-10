@@ -55,12 +55,12 @@ export function FeedbackCard() {
         </div>
         {exportStatus && (
           <p className={exportStatus.error ? 'text-sm text-destructive' : 'text-sm text-muted-foreground'}>
-            {t(exportStatus.messageKey, exportStatus.params)}
+            {t(exportStatus.messageKey, { defaultValue: exportStatus.messageKey, ...exportStatus.params })}
           </p>
         )}
         {uploadStatus && (
           <p className={uploadStatus.error ? 'text-sm text-destructive' : 'text-sm text-muted-foreground'}>
-            {t(uploadStatus.messageKey, uploadStatus.params)}
+            {t(uploadStatus.messageKey, { defaultValue: uploadStatus.messageKey, ...uploadStatus.params })}
           </p>
         )}
       </CardContent>

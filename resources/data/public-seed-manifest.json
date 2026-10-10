@@ -1,0 +1,15 @@
+{
+  "source": "Windrun public aggregate API",
+  "sourceDate": "2026-10-10T13:36:01.089Z",
+  "patches": [
+    "7.41f"
+  ],
+  "abilities": 513,
+  "heroModels": 127,
+  "abilityPairs": 5434,
+  "heroAbilityPairs": 3820,
+  "personalRecords": 0,
+  "omitted": [
+    "Triplets and role-shift enrichment are fetched on the next successful online update."
+  ]
+}

@@ -116,7 +116,9 @@ function mapRow(row: typeof abilities.$inferSelect): AbilityDetail {
   }
 }
 
-export function createAbilityRepository(db: SQLJsDatabase): AbilityRepository {
+export function createAbilityRepository<TSchema extends Record<string, unknown>>(
+  db: SQLJsDatabase<TSchema>,
+): AbilityRepository {
   return {
     getAll() {
       return db

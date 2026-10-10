@@ -1,5 +1,5 @@
-appId: com.tiarinhino.dota2abilitydraftplus
-productName: "Dota 2 Ability Draft Plus"
+appId: com.rubickguo.abilitydraftplus.cn
+productName: "Ability Draft Plus CN Beta"
 copyright: "Copyright (c) 2026 Tiarin Hino"
 directories:
   buildResources: build
@@ -38,12 +38,17 @@ win:
       arch:
         - x64
 nsis:
+  artifactName: "Ability-Draft-Plus-CN-Beta-Setup-${version}.${ext}"
   oneClick: false
   allowToChangeInstallationDirectory: true
   perMachine: false
   createDesktopShortcut: true
   createStartMenuShortcut: true
+portable:
+  artifactName: "Ability-Draft-Plus-CN-Beta-Portable-${version}.${ext}"
 publish:
   provider: github
-  owner: tiarin-hino
+  owner: rubickguo
   repo: ability-draft-plus
+  channel: beta
+  releaseType: prerelease

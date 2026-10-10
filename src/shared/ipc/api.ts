@@ -176,6 +176,7 @@ export interface IpcInvokeMap {
       cfgExists: boolean
       /** Port pinned in the existing cfg's uri; null if absent/unparseable. */
       cfgPort: number | null
+      cfgOutdated: boolean
     }
   }
   'gsi:writeCfg': {

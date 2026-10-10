@@ -34,7 +34,9 @@ export interface PlayerStatsRepository {
   clear(): void
 }
 
-export function createPlayerStatsRepository(db: SQLJsDatabase): PlayerStatsRepository {
+export function createPlayerStatsRepository<TSchema extends Record<string, unknown>>(
+  db: SQLJsDatabase<TSchema>,
+): PlayerStatsRepository {
   return {
     replaceAbilityStats(entries: PlayerStatsUpsert[]): void {
       db.delete(playerAbilityStats).run()

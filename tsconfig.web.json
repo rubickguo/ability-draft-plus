@@ -24,5 +24,11 @@
       "@core/*": ["src/core/*"]
     }
   },
-  "include": ["src/renderer/**/*", "src/shared/**/*", "src/core/**/*", "resources/data/*.json"]
+  "include": [
+    "src/renderer/**/*",
+    "src/shared/**/*",
+    "src/core/**/*",
+    "resources/data/*.json",
+    "src/shared/localization/*.json"
+  ]
 }

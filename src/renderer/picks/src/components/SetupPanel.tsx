@@ -92,7 +92,7 @@ function Seg<T extends string | boolean>({
 }
 
 function CopyUrl({ team, url }: { team: StreamTeam; url: string }) {
-  const { t } = useTranslation()
+  const { t } = useTranslation('picks')
   const [copied, setCopied] = useState(false)
 
   const copy = () => {
@@ -121,7 +121,7 @@ function CopyUrl({ team, url }: { team: StreamTeam; url: string }) {
 const SPACING_KEYS = ['rowGap', 'slotGap', 'heroGap', 'ultGap'] as const
 
 export function SetupPanel() {
-  const { t } = useTranslation()
+  const { t } = useTranslation('picks')
   const [setup, setSetup] = useState<SetupState>(loadStoredSetup)
   const [demo] = useState(buildDemoPicksState)
   // Strips always render the demo draft here; the live feed only drives language.

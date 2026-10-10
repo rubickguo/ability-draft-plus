@@ -1,4 +1,6 @@
 import type { WindrunApiClient } from './windrun-api-client'
+import { WindrunApiError } from './windrun-api-client'
+import { WindrunBrowserError } from '@shared/windrun-browser-error'
 import type { ScraperProgress, ScraperResult, ScraperOptions } from './types'
 import {
   transformAbilitiesAndHeroes,
@@ -58,6 +60,31 @@ export interface LiquipediaDeps {
   ) => Promise<LiquipediaAbilityUpdate[]>
 }
 
+function requireObject(value: unknown, field: string): asserts value is Record<string, unknown> {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) {
+    throw new Error(`Invalid Windrun response: ${field} must be an object`)
+  }
+}
+
+/** Validate the fields consumed by the transforms, before replacing any saved data. */
+function requireRows(
+  value: unknown,
+  field: string,
+  numberFields: string[],
+  stringFields: string[] = [],
+): void {
+  if (!Array.isArray(value)) throw new Error(`Invalid Windrun response: ${field} must be an array`)
+  for (const row of value) {
+    requireObject(row, `${field} entry`)
+    if (
+      numberFields.some((key) => typeof row[key] !== 'number' || !Number.isFinite(row[key])) ||
+      stringFields.some((key) => typeof row[key] !== 'string' || row[key].length === 0)
+    ) {
+      throw new Error(`Invalid Windrun response: malformed ${field} entry`)
+    }
+  }
+}
+
 export async function performFullScrape(
   deps: ScraperDeps,
   onProgress: (progress: ScraperProgress) => void,
@@ -72,6 +99,20 @@ export async function performFullScrape(
       deps.apiClient.fetchStaticHeroes(),
     ])
 
+    requireRows(
+      staticAbilitiesRes?.data,
+      'static abilities',
+      ['valveId'],
+      ['shortName', 'englishName'],
+    )
+    requireObject(staticHeroesRes?.data, 'static heroes')
+    requireRows(
+      Object.values(staticHeroesRes.data),
+      'static heroes',
+      ['id'],
+      ['shortName', 'englishName'],
+    )
+
     // Static abilities is an array — build a valveId-keyed lookup for fast access
     const abilityLookup = buildAbilityLookup(staticAbilitiesRes.data)
     const staticHeroes = staticHeroesRes.data
@@ -82,6 +123,20 @@ export async function performFullScrape(
       deps.apiClient.fetchAbilities(options.patch),
       deps.apiClient.fetchAbilityHighSkill(options.patch),
     ])
+
+    requireObject(abilitiesRes?.data, 'abilities data')
+    requireObject(abilitiesRes.data.patches, 'ability patches')
+    if (
+      !Array.isArray(abilitiesRes.data.patches.overall) ||
+      abilitiesRes.data.patches.overall.some((patch) => typeof patch !== 'string')
+    ) {
+      throw new Error('Invalid Windrun response: ability patches must be an array of strings')
+    }
+    requireObject(hsRes?.data, 'high-skill data')
+    requireObject(hsRes.data.highSkillData, 'high-skill statistics')
+    const statFields = ['abilityId', 'winrate', 'avgPickPosition']
+    requireRows(abilitiesRes.data.abilityStats, 'ability statistics', statFields)
+    requireRows(hsRes.data.highSkillData.abilityStats, 'high-skill statistics', statFields)
 
     const overallStats = abilitiesRes.data.abilityStats
     const hsStats = hsRes.data.highSkillData.abilityStats
@@ -96,6 +151,47 @@ export async function performFullScrape(
     const { heroData, abilityData } = transformAbilitiesAndHeroes(
       overallStats,
       hsStats,
+      abilityLookup,
+      staticHeroes,
+    )
+
+    // Fetch every required endpoint before altering the existing snapshot. A
+    // challenge on a later endpoint must not replace half of a user's data.
+    onProgress({ phase: 'phase1', message: 'Fetching ability pairs and triplets...' })
+    const [pairsRes, tripletsRes] = await Promise.all([
+      deps.apiClient.fetchAbilityPairs(options.patch),
+      deps.apiClient.fetchAbilityTriplets(options.patch),
+    ])
+    requireObject(pairsRes?.data, 'pairs data')
+    requireObject(tripletsRes?.data, 'triplets data')
+    // The API may omit optional lists; a present list must still have a valid shape.
+    requireRows(pairsRes.data.abilityPairs ?? [], 'pairs', [
+      'abilityIdOne',
+      'abilityIdTwo',
+      'winrate',
+    ])
+    requireRows(pairsRes.data.abilityStats ?? [], 'pair statistics', statFields)
+    requireRows(tripletsRes.data.abilityTriplets ?? [], 'triplets', [
+      'abilityIdOne',
+      'abilityIdTwo',
+      'abilityIdThree',
+      'winrate',
+    ])
+
+    // Complete every pure conversion before the first write, including combinations.
+    const pairsAbilityStats = pairsRes.data.abilityStats ?? []
+    const abilityWinrates = buildWinrateMap(
+      pairsAbilityStats.length > 0 ? pairsAbilityStats : overallStats,
+    )
+    const { abilityPairs, heroPairs } = transformPairs(
+      pairsRes.data.abilityPairs ?? [],
+      abilityWinrates,
+      abilityLookup,
+      staticHeroes,
+    )
+    const { abilityTriplets, heroTriplets } = transformTriplets(
+      tripletsRes.data.abilityTriplets ?? [],
+      abilityWinrates,
       abilityLookup,
       staticHeroes,
     )
@@ -155,13 +251,9 @@ export async function performFullScrape(
         dmgShift: s.dmgShift,
         healingShift: s.healingShift,
       }))
-      const applied = deps.abilities.applyAbilityShifts(
-        entries.filter((e) => e.windrunId > 0),
-      )
+      const applied = deps.abilities.applyAbilityShifts(entries.filter((e) => e.windrunId > 0))
       const heroApplied = deps.heroes.applyHeroShifts(
-        entries
-          .filter((e) => e.windrunId < 0)
-          .map((e) => ({ ...e, windrunId: -e.windrunId })),
+        entries.filter((e) => e.windrunId < 0).map((e) => ({ ...e, windrunId: -e.windrunId })),
       )
       onProgress({
         phase: 'phase1',
@@ -169,42 +261,15 @@ export async function performFullScrape(
       })
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err)
-      onProgress({ phase: 'phase1', message: `Ability shifts unavailable (kept previous values): ${message}` })
+      onProgress({
+        phase: 'phase1',
+        message: `Ability shifts unavailable (kept previous values): ${message}`,
+      })
     }
 
     deps.persist()
 
     // ── Phase 2: Pairs & Triplets ──────────────────────────────────────────
-    onProgress({ phase: 'phase2', message: 'Fetching ability pairs and triplets...' })
-
-    const [pairsRes, tripletsRes] = await Promise.all([
-      deps.apiClient.fetchAbilityPairs(options.patch),
-      deps.apiClient.fetchAbilityTriplets(options.patch),
-    ])
-
-    // Use the abilityStats from the pairs response for synergy_increase calculation
-    // API may omit these fields — default to empty arrays
-    const pairsAbilityStats = pairsRes.data.abilityStats ?? []
-    const abilityWinrates = buildWinrateMap(
-      pairsAbilityStats.length > 0 ? pairsAbilityStats : overallStats,
-    )
-
-    onProgress({ phase: 'phase2', message: 'Transforming pairs...' })
-
-    const { abilityPairs, heroPairs } = transformPairs(
-      pairsRes.data.abilityPairs ?? [],
-      abilityWinrates,
-      abilityLookup,
-      staticHeroes,
-    )
-
-    const { abilityTriplets, heroTriplets } = transformTriplets(
-      tripletsRes.data.abilityTriplets ?? [],
-      abilityWinrates,
-      abilityLookup,
-      staticHeroes,
-    )
-
     const abilityNameToIdMap = deps.abilities.getNameToIdMap()
 
     onProgress({
@@ -235,10 +300,7 @@ export async function performFullScrape(
       heroNameToIdMap,
     )
 
-    deps.triplets.clearAndInsertAbilityTriplets(
-      abilityTriplets,
-      abilityNameToIdMap,
-    )
+    deps.triplets.clearAndInsertAbilityTriplets(abilityTriplets, abilityNameToIdMap)
 
     deps.triplets.clearAndInsertHeroAbilityTriplets(
       heroTriplets,
@@ -252,9 +314,13 @@ export async function performFullScrape(
     const now = new Date().toISOString()
     deps.metadata.setLastScrapeDate(now)
     captureRankingEvidence(deps.metadata, {
-      overallStats, hsStats, abilityLookup, staticHeroes,
+      overallStats,
+      hsStats,
+      abilityLookup,
+      staticHeroes,
       pairs: pairsRes.data.abilityPairs ?? [],
-      sourceDate: now, patches: abilitiesRes.data.patches.overall,
+      sourceDate: now,
+      patches: abilitiesRes.data.patches.overall,
     })
     deps.persist()
 
@@ -268,7 +334,14 @@ export async function performFullScrape(
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err)
     onProgress({ phase: 'error', message: `Scrape failed: ${message}` })
-    return { success: false, error: message }
+    return {
+      success: false,
+      error: message,
+      ...((err instanceof WindrunApiError && err.status === 403) ||
+      (err instanceof WindrunBrowserError && err.code === 'verification')
+        ? { browserRequired: true }
+        : {}),
+    }
   }
 }
 

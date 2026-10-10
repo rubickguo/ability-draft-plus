@@ -23,7 +23,7 @@ const INSTRUCTIONS = [
   'mapper.anchor.instruction2',
   'mapper.anchor.instruction3',
   'mapper.anchor.instruction4',
-]
+] as const
 
 export function StepAnchorCalibration({
   imageBase64,

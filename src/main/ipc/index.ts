@@ -39,7 +39,7 @@ import {
   initialOverlayLifecycleState,
   nextOverlayLifecycle,
 } from '@core/gsi/overlay-lifecycle'
-import type { LayoutSource } from '@shared/types'
+import type { LayoutSource } from '@shared/ipc/api'
 
 // @DEV-GUIDE: Central IPC handler registration. All renderer↔main communication goes through
 // typed IPC channels following the domain:action naming convention (e.g. 'ml:scan', 'hero:getAll').
@@ -69,7 +69,7 @@ export function registerIpcHandlers(
   layoutService: LayoutService,
   screenshotService: ScreenshotService,
   draftStore: StoreApi<DraftStore>,
-  scanProcessingService: ScanProcessingService,
+  _scanProcessingService: ScanProcessingService,
   appStore: AppStore,
   bridge: ZustandBridge,
   updateService: UpdateService,
@@ -221,6 +221,8 @@ export function registerIpcHandlers(
     const scaleFactor = layoutService.getScaleFactor()
     pendingOverlayData = {
       initialSetup: true,
+      autoDraftTrackingEnabled:
+        dbService.metadata.getSettings().experimentalAutoDraftTracking === true,
       scanData: null,
       targetResolution: resolution,
       scaleFactor,

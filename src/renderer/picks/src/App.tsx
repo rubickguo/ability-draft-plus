@@ -30,7 +30,7 @@ function resolveBg(explicit: PicksBg | null): PicksBg {
 }
 
 function StripPage({ team }: { team: StreamTeam }) {
-  const { t } = useTranslation()
+  const { t } = useTranslation('picks')
   const { picks } = usePicksState()
   const options = parseStripOptions(
     new URLSearchParams(window.location.search),
